@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>เครื่องเล่นเทป</title>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@700&family=Mali:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --wood:#5a3a22; --body:#2b2622; --cream:#efe4cc; --orange:#e0782f; --mustard:#d9a93a; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; display:grid; place-items:center; padding:24px;
+         background:radial-gradient(circle at 30% 20%, #3b2f27, #16120f); font-family:'Mali',sans-serif; color:var(--cream); }
+  .deck { width:min(560px,100%); background:linear-gradient(#3a332d,var(--body)); border-radius:18px; padding:22px;
+          box-shadow:0 0 0 6px var(--wood), 0 20px 50px #000a, inset 0 1px 0 #fff2; }
+  .brand { display:flex; justify-content:space-between; align-items:center; font-family:'Courier Prime',monospace;
+           letter-spacing:3px; font-size:13px; color:#b9ab90; margin-bottom:14px; }
+  .led { width:10px; height:10px; border-radius:50%; background:#511; display:inline-block; margin-right:6px; }
+  .on .led { background:#f33; box-shadow:0 0 8px #f33; }
+
+  /* cassette */
+  .well { background:#111; border-radius:10px; padding:14px; box-shadow:inset 0 4px 12px #000; }
+  .cassette { position:relative; aspect-ratio:1.6; background:linear-gradient(#cfc3a8,#b8ab8f); border-radius:10px; padding:7% 6%; }
+  .label { height:100%; background:var(--cream); border-radius:6px; position:relative; overflow:hidden;
+           background-image:linear-gradient(var(--orange) 0 14%, var(--mustard) 14% 22%, transparent 22%); }
+  .title { position:absolute; top:24%; left:6%; right:6%; font-family:'Mali'; font-weight:700; color:#3a2a1c;
+           font-size:clamp(12px,3.4vw,17px); white-space:nowrap; overflow:hidden; border-bottom:1px dashed #a99; padding-bottom:2px; }
+  .title span { display:inline-block; }
+  .side { position:absolute; top:2%; left:4%; font:700 13px 'Courier Prime'; color:#fff; }
+  .window { position:absolute; left:22%; right:22%; top:42%; height:36%; background:#2a2420cc; border-radius:40px;
+            display:flex; justify-content:space-between; align-items:center; padding:0 6%; }
+  .reel { position:relative; width:22%; aspect-ratio:1; display:grid; place-items:center; }
+  .tape { position:absolute; border-radius:50%; background:#3b2516; transition:width .5s, height .5s; }
+  .hub { position:relative; width:52%; aspect-ratio:1; border-radius:50%; background:#eee;
+         background:repeating-conic-gradient(#eee 0 30deg,#999 30deg 60deg); border:3px solid #ddd; }
+  .hub::after { content:""; position:absolute; inset:30%; border-radius:50%; background:#2a2420; }
+  .spin .hub { animation:spin 1.6s linear infinite; }
+  .fast .hub { animation-duration:.3s; }
+  @keyframes spin { to { transform:rotate(-360deg); } }
+  .screws::before, .screws::after { content:""; position:absolute; width:8px; height:8px; border-radius:50%; background:#8a7f6a; bottom:5%; }
+  .screws::before { left:4%; } .screws::after { right:4%; }
+
+  /* controls */
+  .row { display:flex; gap:10px; margin-top:16px; }
+  input[type=text] { flex:1; padding:10px 12px; border-radius:8px; border:0; background:#1b1714; color:var(--cream);
+                     font-family:'Courier Prime'; box-shadow:inset 0 2px 6px #000; }
+  .keys { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-top:16px; }
+  button { font:inherit; cursor:pointer; border:0; border-radius:6px; padding:12px 0; color:#222; font-weight:700;
+           background:linear-gradient(#ddd,#a9a9a9); box-shadow:0 5px 0 #555, 0 6px 8px #0008; transition:transform .05s, box-shadow .05s; }
+  button:active, button.down { transform:translateY(4px); box-shadow:0 1px 0 #555; }
+  button.load { background:linear-gradient(var(--mustard),#b4851f); padding:10px 16px; }
+  .meta { display:flex; justify-content:space-between; align-items:center; margin-top:16px; gap:12px; font-size:13px; color:#b9ab90; }
+  .counter { font:700 18px 'Courier Prime'; background:#000; color:#f4a; padding:4px 10px; border-radius:4px; letter-spacing:2px; color:#ff9a3c; }
+  input[type=range] { accent-color:var(--orange); width:110px; }
+  /* YouTube must stay visible on the page (YouTube terms), so it's a small "monitor" */
+  .monitor { margin-top:16px; border-radius:8px; overflow:hidden; aspect-ratio:16/9; width:160px; filter:sepia(.5) contrast(1.1);
+             box-shadow:0 0 0 3px #111; opacity:.85; }
+  .monitor iframe, #yt { width:100%; height:100%; display:block; }
+  .msg { font-size:12px; color:#c88; min-height:16px; margin-top:6px; }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+  <div class="brand"><span><i class="led"></i>STEREO CASSETTE DECK</span><span>BOOM-80</span></div>
+
+  <div class="well">
+    <div class="cassette screws" id="cassette">
+      <div class="label">
+        <div class="side">A</div>
+        <div class="title"><span id="title">ใส่ลิงก์ YouTube แล้วกดใส่เทป ↓</span></div>
+        <div class="window">
+          <div class="reel"><div class="tape" id="tapeL"></div><div class="hub"></div></div>
+          <div class="reel"><div class="tape" id="tapeR"></div><div class="hub"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <input type="text" id="url" placeholder="https://youtu.be/... หรือลิงก์เพลย์ลิสต์">
+    <button class="load" id="load">ใส่เทป</button>
+  </div>
+  <div class="msg" id="msg"></div>
+
+  <div class="keys">
+    <button id="rew" title="ถอยหลัง 10 วิ">◀◀</button>
+    <button id="play" title="เล่น">▶</button>
+    <button id="pause" title="พัก">❚❚</button>
+    <button id="ff" title="เดินหน้า 10 วิ">▶▶</button>
+    <button id="next" title="เพลงถัดไป (เพลย์ลิสต์)">⏭</button>
+  </div>
+
+  <div class="meta">
+    <span class="counter" id="counter">000</span>
+    <label>เสียงซ่า <input type="range" id="hiss" min="0" max="100" value="35"></label>
+    <label>เสียงเพลง <input type="range" id="vol" min="0" max="100" value="80"></label>
+  </div>
+
+  <div class="monitor"><div id="yt"></div></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let player, ready = false, playing = false;
+
+// ---- YouTube ----
+function parse(url) {
+  const list = url.match(/[?&]list=([\w-]+)/);
+  const vid = url.match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-]{11})/) || url.match(/^([\w-]{11})$/);
+  return { list: list && list[1], vid: vid && vid[1] };
+}
+window.onYouTubeIframeAPIReady = () => {
+  player = new YT.Player('yt', {
+    playerVars: { controls: 0, playsinline: 1, rel: 0 },
+    events: {
+      onReady: () => { ready = true; player.setVolume($('vol').value); },
+      onStateChange: e => {
+        playing = e.data === YT.PlayerState.PLAYING;
+        $('cassette').classList.toggle('spin', playing);
+        $('deck').classList.toggle('on', playing);
+        if (playing) { setTitle(player.getVideoData().title); hissOn(); } else hissOff();
+      },
+      onError: () => $('msg').textContent = 'เปิดวิดีโอนี้ไม่ได้ (เจ้าของอาจปิดการฝัง) ลองลิงก์อื่นนะ'
+    }
+  });
+};
+const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(s);
+
+function setTitle(t) {
+  const el = $('title'); el.textContent = t || '...';
+  el.getAnimations().forEach(a => a.cancel());
+  const over = el.scrollWidth - el.parentElement.clientWidth;
+  if (over > 0) el.animate([{transform:'translateX(0)'},{transform:`translateX(${-over}px)`}],
+                           {duration: over*40+2000, iterations:Infinity, direction:'alternate', easing:'ease-in-out'});
+}
+
+// ---- tape hiss (Web Audio, layered on top — YouTube audio itself can't be processed) ----
+let ctx, hissGain;
+function initAudio() {
+  if (ctx) return;
+  ctx = new AudioContext();
+  const len = ctx.sampleRate * 2, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
+  let b = 0;
+  for (let i = 0; i < len; i++) { b = 0.97*b + 0.03*(Math.random()*2-1); d[i] = b*4 + (Math.random()*2-1)*0.15; }
+  const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+  const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 3500; bp.Q.value = 0.4;
+  hissGain = ctx.createGain(); hissGain.gain.value = 0;
+  src.connect(bp).connect(hissGain).connect(ctx.destination); src.start();
+}
+const hissLevel = () => ($('hiss').value / 100) * 0.12;
+function hissOn()  { if (hissGain) hissGain.gain.setTargetAtTime(hissLevel(), ctx.currentTime, 0.3); }
+function hissOff() { if (hissGain) hissGain.gain.setTargetAtTime(0, ctx.currentTime, 0.1); }
+function clunk() {  // mechanical button click
+  initAudio();
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.frequency.setValueAtTime(180, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(40, ctx.currentTime+0.08);
+  g.gain.setValueAtTime(0.3, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.1);
+  o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime+0.1);
+}
+
+// ---- controls ----
+const guard = fn => () => { clunk(); if (!ready) return $('msg').textContent = 'รอเครื่องโหลดแป๊บนึง...'; fn(); };
+$('load').onclick = guard(() => {
+  const { vid, list } = parse($('url').value.trim());
+  $('msg').textContent = '';
+  if (list) player.loadPlaylist({ list, listType: 'playlist' });
+  else if (vid) player.loadVideoById(vid);
+  else $('msg').textContent = 'ลิงก์นี้ไม่ใช่ลิงก์ YouTube นะ';
+});
+$('url').onkeydown = e => e.key === 'Enter' && $('load').click();
+$('play').onclick  = guard(() => player.playVideo());
+$('pause').onclick = guard(() => player.pauseVideo());
+$('next').onclick  = guard(() => player.nextVideo());
+function wind(sec) {
+  $('cassette').classList.add('fast');
+  player.seekTo(Math.max(0, player.getCurrentTime() + sec), true);
+  setTimeout(() => $('cassette').classList.remove('fast'), 500);
+}
+$('rew').onclick = guard(() => wind(-10));
+$('ff').onclick  = guard(() => wind(10));
+$('vol').oninput = () => ready && player.setVolume($('vol').value);
+$('hiss').oninput = () => playing && hissOn();
+
+// ---- tape counter + reel sizes follow progress ----
+setInterval(() => {
+  if (!ready || !player.getDuration) return;
+  const t = player.getCurrentTime() || 0, d = player.getDuration() || 0, p = d ? t / d : 0;
+  $('counter').textContent = String(Math.floor(t)).padStart(3, '0').slice(-3);
+  $('tapeL').style.width = $('tapeL').style.height = (100 + 90 * (1 - p)) + '%';
+  $('tapeR').style.width = $('tapeR').style.height = (100 + 90 * p) + '%';
+}, 500);
+</script>
+</body>
+</html>
