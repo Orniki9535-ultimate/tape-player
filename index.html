@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>เครื่องเล่นเทป</title>
 <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@700&family=Mali:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <style>
   :root { --wood:#5a3a22; --body:#2b2622; --cream:#efe4cc; --orange:#e0782f; --mustard:#d9a93a; }
   * { box-sizing:border-box; }
@@ -54,6 +55,8 @@
            background:linear-gradient(#ddd,#a9a9a9); box-shadow:0 5px 0 #555, 0 6px 8px #0008; transition:transform .05s, box-shadow .05s; }
   button:active, button.down { transform:translateY(4px); box-shadow:0 1px 0 #555; }
   /* LOOP key: latches down with a green lamp; the arrow spins while the deck auto-rewinds */
+  .keys .bi { font-size:20px; line-height:1; vertical-align:middle; }
+  #stop .bi { font-size:17px; margin:0 1px; }   /* two icons share one key */
   #loop { position:relative; }
   #loop .lamp { position:absolute; top:4px; right:4px; width:6px; height:6px; border-radius:50%; background:#152; }
   #loop[aria-pressed=true] { transform:translateY(4px); box-shadow:0 1px 0 #555; }
@@ -134,13 +137,13 @@
   </div>
 
   <div class="keys">
-    <button id="pause" aria-label="พัก" title="พัก (กดอีกครั้งเพื่อเล่นต่อ)">❚❚</button>
-    <button id="rew" aria-label="กรอกลับ" title="กดค้างเพื่อกรอกลับ">◀◀</button>
-    <button id="play" aria-label="เล่น" title="เล่น">▶</button>
-    <button id="ff" aria-label="กรอไปข้างหน้า" title="กดค้างเพื่อกรอไปข้างหน้า">▶▶</button>
-    <button id="next" aria-label="เพลงถัดไป" title="เพลงถัดไป (เพลย์ลิสต์)">⏭&#xFE0E;</button>
-    <button id="stop" aria-label="หยุด / ดีดเทปออก" title="หยุด — กดตอนหยุดอยู่เพื่อดีดเทปออก">■ ⏏&#xFE0E;</button>
-    <button id="loop" aria-label="เล่นวนซ้ำ" aria-pressed="false" title="วนซ้ำ — เล่นจบม้วนแล้วกรอกลับไปเล่นใหม่เอง"><b>↻</b><i class="lamp"></i></button>
+    <button id="pause" aria-label="พัก" title="พัก (กดอีกครั้งเพื่อเล่นต่อ)"><i class="bi bi-pause-fill" aria-hidden="true"></i></button>
+    <button id="rew" aria-label="กรอกลับ" title="กดค้างเพื่อกรอกลับ"><i class="bi bi-rewind-fill" aria-hidden="true"></i></button>
+    <button id="play" aria-label="เล่น" title="เล่น"><i class="bi bi-play-fill" aria-hidden="true"></i></button>
+    <button id="ff" aria-label="กรอไปข้างหน้า" title="กดค้างเพื่อกรอไปข้างหน้า"><i class="bi bi-fast-forward-fill" aria-hidden="true"></i></button>
+    <button id="next" aria-label="เพลงถัดไป" title="เพลงถัดไป (เพลย์ลิสต์)"><i class="bi bi-skip-end-fill" aria-hidden="true"></i></button>
+    <button id="stop" aria-label="หยุด / ดีดเทปออก" title="หยุด — กดตอนหยุดอยู่เพื่อดีดเทปออก"><i class="bi bi-stop-fill" aria-hidden="true"></i><i class="bi bi-eject-fill" aria-hidden="true"></i></button>
+    <button id="loop" aria-label="เล่นวนซ้ำ" aria-pressed="false" title="วนซ้ำ — เล่นจบม้วนแล้วกรอกลับไปเล่นใหม่เอง"><b><i class="bi bi-arrow-repeat" aria-hidden="true"></i></b><i class="lamp"></i></button>
   </div>
 
   <div class="meta">
