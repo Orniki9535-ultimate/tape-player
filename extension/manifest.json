@@ -1,13 +1,25 @@
 {
   "manifest_version": 3,
   "name": "Tape Deck FX",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Lets the Tape Deck app put its worn-tape sound (wow & flutter, tape age) on YouTube videos played inside it.",
-  "content_scripts": [{
-    "matches": ["https://www.youtube.com/embed/*", "https://www.youtube-nocookie.com/embed/*"],
-    "js": ["fx.js", "content.js"],
-    "all_frames": true,
-    "run_at": "document_start"
-  }],
-  "browser_specific_settings": { "gecko": { "id": "tape-deck-fx@orniki9535-ultimate", "strict_min_version": "115.0" } }
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/embed/*", "https://www.youtube-nocookie.com/embed/*"],
+      "js": ["fx.js", "content.js"],
+      "all_frames": true,
+      "run_at": "document_start"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "tape-deck-fx@orniki9535-ultimate",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    }
+  }
 }
