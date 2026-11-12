@@ -157,7 +157,7 @@ let state = 'stop';          // 'stop' | 'play' | 'pause' — the deck's keys, n
 let wind = 0, wasPlaying = false, preroll = 0, settle = 0;
 let snapAt = 0, loose = 0;      // snapAt: when the tape snapped (ms); loose: free-spinning take-up reel
 const CUT = 120, GAP = 2500, FADE = 3000;   // ms: tape stretches, then silence, then the music fades back in
-const SNAP_EVERY = 120;      // s of playing between random snaps, on average
+const SNAP_EVERY = 60;       // s of playing between random snaps, on average
 let autoRew = false;         // LOOP is rewinding the tape by itself, to play it again
 let pos = 0, zero = 0;       // tape position (s) as shown by reels + counter; counter zero point
 
@@ -490,12 +490,6 @@ function frame(now) {
   const target = !on ? 0 : wind ? wind * 5 : state === 'play' ? 1 : 0;
   speed += (target - speed) * Math.min(1, dt * 8);                        // motor inertia
   if (on && src.motor) src.motor(speed);                                  // file audio follows the motor up and down
-  if ($('snap').checked && Math.random() < dt / SNAP_EVERY) snap();      // random snaps while playing
-  if (snapAt && on) {                                                     // snapped: silent for GAP, then fade back in
-    const e = now - snapAt, duck = e < 0 ? 1 : e < GAP ? 0 : Math.min(1, (e - GAP) / FADE);
-    src.vol($('vol').value * duck * duck);
-    if (e > 0 && duck === 1) { snapAt = 0; $('cassette').classList.remove('broken'); msg(''); if (state === 'play') hissOn(); }
-  }
   loose *= Math.exp(-dt * 1.6);                                           // loose take-up reel spins down
   r.forEach((cm, i) => {
     ang[i] -= (speed + (i ? loose : 0)) * dt * 273 / cm;                                      // 4.76 cm/s tape speed -> deg/s
@@ -512,6 +506,19 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+
+// random snaps + the fade back run on a timer, not in frame(): a background tab gets no animation frames,
+// and music is usually left playing in one
+let lastTick = performance.now();
+setInterval(() => {
+  const now = performance.now(), dt = (now - lastTick) / 1000; lastTick = now;
+  if ($('snap').checked && Math.random() < dt / SNAP_EVERY) snap();      // random snaps while playing
+  if (snapAt && loaded) {                                                 // snapped: silent for GAP, then fade back in
+    const e = now - snapAt, duck = e < 0 ? 1 : e < GAP ? 0 : Math.min(1, (e - GAP) / FADE);
+    src.vol($('vol').value * duck * duck);
+    if (e > 0 && duck === 1) { snapAt = 0; $('cassette').classList.remove('broken'); msg(''); if (state === 'play') hissOn(); }
+  }
+}, 50);
 
 // self-check: link parsing
 for (const [url, vid, list] of [
