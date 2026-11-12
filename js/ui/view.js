@@ -20,8 +20,8 @@ const view = {
   },
   title: setTitle,
   stripes: tint,
+  screen: on => $('tv').classList.toggle('off', !on),   // the YouTube TV, only while a YouTube tape is in
   source(isFile) {   // a new tape went in
-    $('monitor').hidden = isFile;                                        // monitor is YouTube-only,
     for (const id of ['wow', 'age', 'ab']) $(id).disabled = !isFile;    // sound-bending controls are file-only
     $('ab').setAttribute('aria-pressed', false);
   },

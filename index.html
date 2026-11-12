@@ -44,6 +44,11 @@
     <span class="count"><small>COUNTER</small><span class="counter" id="counter" aria-hidden="true"></span>
       <button class="zero" id="zero" data-t-aria="zero" data-t-title="zero"></button></span>
   </div>
+
+  <div class="tv off" id="tv">   <!-- shows only while a YouTube tape is in -->
+    <small data-t="hYt"></small>
+    <div class="monitor" id="monitor"><div id="yt"></div></div>
+  </div>
   </section>
 
   <section class="settings" data-t-aria="settingsSection">
@@ -79,11 +84,6 @@
     <h2 data-t="hOpts"></h2>
     <label class="switch has-tip"><input type="checkbox" id="snap" checked aria-describedby="tip-snap"> <span data-t="snap"></span> <span class="tip" aria-hidden="true">?</span><span class="tip-text" role="tooltip" id="tip-snap" data-t="tipSnap"></span></label>
     <label class="switch" data-t-title="skipTip"><input type="checkbox" id="skip" disabled> <span data-t="skip"></span></label>
-  </div>
-
-  <div class="group screen">
-    <h2 data-t="hYt"></h2>
-    <div class="monitor" id="monitor"><div id="yt"></div></div>
   </div>
   </section>
 </div>

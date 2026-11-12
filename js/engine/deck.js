@@ -89,7 +89,7 @@ function stop() {   // STOP/EJECT is one key, like a real deck
   if (wind) return windEnd();   // STOP during the LOOP rewind cancels it (doesn't eject mid-wind)
   if (state !== 'stop') { src.pause(); return show('stop'); }
   if (!loaded) return;
-  loaded = false; src.eject(); view.well(true); view.msg('');
+  loaded = false; src.eject(); view.well(true); view.screen(false); view.msg('');
 }
 const nextTrack = () => loaded ? src.next() : noTape();
 const resetCounter = () => zero = pos;
@@ -111,7 +111,7 @@ function insert(next, cue) {   // cue only: a tape doesn't play until you press 
   if (loaded) src.eject();
   loaded = false; view.well(true);
   setTimeout(() => {
-    src = next; view.title(curTitle = ''); view.stripes(null); opts.bypass = false; tune(); view.source(src === file);
+    src = next; view.title(curTitle = ''); view.stripes(null); opts.bypass = false; tune(); view.source(src === file); view.screen(src === yt);
     cue(); src.vol(opts.vol);
     snapAt = 0; view.broken(false);   // a fresh tape (the snapped one leaves with its strand showing)
     pos = zero = 0; loaded = true; view.well(false); setTimeout(clunk, 400);
