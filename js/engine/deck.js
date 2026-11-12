@@ -5,7 +5,8 @@
 const WIND = 15;       // wind speed, x realtime (long tapes go faster: a full wind never takes > 40 s)
 const windRate = () => Math.max(WIND, src.dur() / 40);
 const CUT = 120, GAP = 2500, FADE = 3000;   // ms: tape stretches, then silence, then the music fades back in
-const SNAP_EVERY = 60;       // s of playing between random snaps, on average
+const SNAP_CALM = 120;       // s of playing after a new tape/track or a snap before the tape can snap again
+const SNAP_EVERY = 180;      // after that, s between random snaps on average (so many songs get none at all)
 
 // settings, in engine units (the UI fills these in from its controls at startup)
 const opts = { vol: 80, hiss: 0.35, wow: 0.5, age: 0.6, bypass: false, snap: true, loop: false, skip: false };
@@ -15,6 +16,7 @@ let state = 'stop';          // 'stop' | 'play' | 'pause': the deck's keys, not 
 let curTitle = '';
 let wind = 0, wasPlaying = false, preroll = 0, settle = 0;
 let snapAt = 0, loose = 0;   // snapAt: when the tape snapped (ms); loose: free-spinning take-up reel
+let calm = 0;                // s played since the last snap or the start of this tape/track
 let autoRew = false;         // LOOP is rewinding the tape by itself, to play it again
 let pos = 0, zero = 0;       // tape position (s) as shown by reels + counter; counter zero point
 let speed = 0;               // motor speed: 1 = playing, ±5 = winding
@@ -68,7 +70,7 @@ function ended() {   // end of tape: auto-stop, and with LOOP on, rewind by itse
 function snap() {   // the tape stretches (pitch sags), snaps, goes silent, then the music fades back in where it is
   if (!loaded || snapAt || wind || state !== 'play') return;
   speed *= 0.5;                                    // drag: reels slow and file audio sags in pitch
-  snapAt = performance.now() + CUT; snapSound(CUT / 1000);
+  snapAt = performance.now() + CUT; snapSound(CUT / 1000); calm = 0;
   setTimeout(() => { hissOff(); loose = 8; view.broken(true); view.msg('snapped'); }, CUT);
 }
 function play() {
@@ -102,7 +104,7 @@ function swapTape(title, id) {   // playlist's next track: the old tape slides o
   view.well(true);
   swapT = setTimeout(() => {
     if (!loaded) return swapping = false;   // ejected mid-swap
-    view.title(title); view.stripes(id); snapAt = 0; view.broken(false); pos = zero = 0;
+    view.title(title); view.stripes(id); snapAt = 0; calm = 0; view.broken(false); pos = zero = 0;
     view.well(false);
     swapT = setTimeout(() => { swapping = false; clunk(); if (resume && loaded) play(); }, 400);
   }, 450);
@@ -115,7 +117,7 @@ function insert(next, cue) {   // cue only: a tape doesn't play until you press 
   setTimeout(() => {
     src = next; view.title(curTitle = ''); view.stripes(null); opts.bypass = false; tune(); view.source(src === file); view.screen(src === yt);
     cue(); src.vol(opts.vol);
-    snapAt = 0; view.broken(false);   // a fresh tape (the snapped one leaves with its strand showing)
+    snapAt = 0; calm = 0; view.broken(false);   // a fresh tape (the snapped one leaves with its strand showing)
     pos = zero = 0; loaded = true; view.well(false); setTimeout(clunk, 400);
   }, wait);
 }
@@ -170,8 +172,9 @@ function tick(dt, now) {
 // and music is usually left playing in one
 let lastTick = performance.now();
 setInterval(() => {
-  const now = performance.now(), dt = (now - lastTick) / 1000; lastTick = now;
-  if (opts.snap && Math.random() < dt / SNAP_EVERY) snap();               // random snaps while playing
+  const now = performance.now(), dt = Math.min(1, (now - lastTick) / 1000); lastTick = now;   // a frozen tab doesn't bank time
+  if (state === 'play' && !wind && !snapAt) calm += dt;
+  if (opts.snap && calm > SNAP_CALM && Math.random() < dt / SNAP_EVERY) snap();   // random snaps while playing
   if (snapAt && loaded) {                                                 // snapped: silent for GAP, then fade back in
     const e = now - snapAt, duck = e < 0 ? 1 : e < GAP ? 0 : Math.min(1, (e - GAP) / FADE);
     src.vol(opts.vol * duck * duck);
