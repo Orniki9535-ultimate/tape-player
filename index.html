@@ -117,7 +117,7 @@
     <input type="file" id="file" accept="audio/*" hidden>
   </div>
   <div class="msgrow"><div class="msg" id="msg" role="status"></div>
-    <span class="count"><button class="mini" id="snap" title="ลองให้เทปขาด! (ต้องเล่นอยู่) — เพลงจะเงียบไปพักนึงแล้วค่อยๆ ดังกลับมาเอง">✂ เทปขาด</button>
+    <span class="count"><label title="ระหว่างเล่น เทปอาจขาดได้ทุกเมื่อ — เพลงจะเงียบไปพักนึงแล้วค่อยๆ ดังกลับมาเอง"><input type="checkbox" id="snap" checked> ✂ เทปขาดแบบสุ่ม</label>
     <label title="ตอนวนซ้ำ ไม่ต้องรอกรอกลับ — กลับไปต้นม้วนแล้วเล่นเลย"><input type="checkbox" id="skip" disabled> ข้ามการกรอกลับ</label></span></div>
 
   <div class="keys">
@@ -157,6 +157,7 @@ let state = 'stop';          // 'stop' | 'play' | 'pause' — the deck's keys, n
 let wind = 0, wasPlaying = false, preroll = 0, settle = 0;
 let snapAt = 0, loose = 0;      // snapAt: when the tape snapped (ms); loose: free-spinning take-up reel
 const CUT = 120, GAP = 2500, FADE = 3000;   // ms: tape stretches, then silence, then the music fades back in
+const SNAP_EVERY = 120;      // s of playing between random snaps, on average
 let autoRew = false;         // LOOP is rewinding the tape by itself, to play it again
 let pos = 0, zero = 0;       // tape position (s) as shown by reels + counter; counter zero point
 
@@ -358,8 +359,7 @@ function ended() {   // end of tape: auto-stop — and with LOOP on, rewind by i
 }
 const noTape = () => msg('ยังไม่ได้ใส่เทป');
 function snap() {   // the tape stretches (pitch sags), snaps, goes silent, then the music fades back in where it is
-  if (!loaded || snapAt) return;
-  if (state !== 'play') return msg('เทปต้องเล่นอยู่ถึงจะขาดได้นะ');
+  if (!loaded || snapAt || wind || state !== 'play') return;
   speed *= 0.5;                                    // drag: reels slow and file audio sags in pitch
   snapAt = performance.now() + CUT; snapSound(CUT / 1000);
   setTimeout(() => { hissOff(); loose = 8; $('cassette').classList.add('broken'); msg('✂ เทปขาด! ต่อเทปแป๊บนึงนะ...'); }, CUT);
@@ -439,7 +439,8 @@ $('play').onclick  = key(play);
 $('pause').onclick = key(pause);
 $('stop').onclick  = key(stop);
 $('next').onclick  = key(() => loaded ? src.next() : noTape());
-$('snap').onclick  = snap;
+$('snap').onchange = () => save('snap', $('snap').checked);
+if (saved('snap') != null) $('snap').checked = saved('snap') === 'true';
 $('pick').onclick  = () => $('file').click();
 $('file').onchange = e => { clunk(); loadFile(e.target.files[0]); e.target.value = ''; };
 const deck = $('deck');   // drag a file onto the deck
@@ -489,6 +490,7 @@ function frame(now) {
   const target = !on ? 0 : wind ? wind * 5 : state === 'play' ? 1 : 0;
   speed += (target - speed) * Math.min(1, dt * 8);                        // motor inertia
   if (on && src.motor) src.motor(speed);                                  // file audio follows the motor up and down
+  if ($('snap').checked && Math.random() < dt / SNAP_EVERY) snap();      // random snaps while playing
   if (snapAt && on) {                                                     // snapped: silent for GAP, then fade back in
     const e = now - snapAt, duck = e < 0 ? 1 : e < GAP ? 0 : Math.min(1, (e - GAP) / FADE);
     src.vol($('vol').value * duck * duck);
