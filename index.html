@@ -10,9 +10,9 @@
   * { box-sizing:border-box; }
   body { margin:0; min-height:100vh; display:grid; place-items:center; padding:24px;
          background:radial-gradient(circle at 30% 20%, #3b2f27, #16120f); font-family:'Mali',sans-serif; color:var(--cream); }
-  .deck { width:min(560px,100%); background:linear-gradient(#3a332d,var(--body)); border-radius:18px; padding:22px;
+  .deck { width:min(1000px,100%); display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:0 26px; align-items:start; background:linear-gradient(#3a332d,var(--body)); border-radius:18px; padding:22px;
           box-shadow:0 0 0 6px var(--wood), 0 20px 50px #000a, inset 0 1px 0 #fff2; }
-  .brand { display:flex; justify-content:space-between; align-items:center; font-family:'Courier Prime',monospace;
+  .brand { grid-column:1/-1; display:flex; justify-content:space-between; align-items:center; font-family:'Courier Prime',monospace;
            letter-spacing:3px; font-size:13px; color:#b9ab90; margin-bottom:14px; }
   .led { width:10px; height:10px; border-radius:50%; background:#511; display:inline-block; margin-right:6px; }
   .on .led { background:#f33; box-shadow:0 0 8px #f33; }
@@ -88,12 +88,21 @@
   .msg { font-size:12px; color:#c88; }
   .msgrow label { display:flex; align-items:center; gap:4px; font-size:12px; color:#b9ab90; white-space:nowrap; cursor:pointer; }
   #skip { accent-color:var(--orange); margin:0; }
+  .settings { border-left:1px solid #fff1; padding-left:26px; }
+  .settings > :first-child { margin-top:0; }
+  @media (max-width:760px) {
+    body { padding:12px; place-items:start center; }
+    .deck { grid-template-columns:minmax(0,1fr); padding:16px; }
+    .settings { border-left:0; padding-left:0; border-top:1px solid #fff1; margin-top:18px; padding-top:18px; }
+    .monitor { margin-inline:auto; }
+  }
 </style>
 </head>
 <body>
 <div class="deck" id="deck">
   <div class="brand"><span><i class="led"></i>STEREO CASSETTE DECK</span><span>BOOM-80</span></div>
 
+  <section class="tapeside" aria-label="เทป">
   <div class="well out" id="well">
     <div class="empty">NO TAPE</div>
     <div class="cassette screws" id="cassette">
@@ -110,16 +119,6 @@
     </div>
   </div>
 
-  <div class="row">
-    <input type="text" id="url" aria-label="ลิงก์ YouTube" placeholder="ลิงก์ YouTube — หรือลากไฟล์เสียงมาวาง">
-    <button class="load" id="load">ใส่เทป</button>
-    <button class="load" id="pick" title="เลือกไฟล์เสียงจากเครื่อง (ได้เสียงเทปยานของจริง)">ไฟล์</button>
-    <input type="file" id="file" accept="audio/*" hidden>
-  </div>
-  <div class="msgrow"><div class="msg" id="msg" role="status"></div>
-    <span class="count"><label title="ระหว่างเล่น เทปอาจขาดได้ทุกเมื่อ — เพลงจะเงียบไปพักนึงแล้วค่อยๆ ดังกลับมาเอง"><input type="checkbox" id="snap" checked> ✂ เทปขาดแบบสุ่ม</label>
-    <label title="ตอนวนซ้ำ ไม่ต้องรอกรอกลับ — กลับไปต้นม้วนแล้วเล่นเลย"><input type="checkbox" id="skip" disabled> ข้ามการกรอกลับ</label></span></div>
-
   <div class="keys">
     <button id="pause" aria-label="พัก" title="พัก (กดอีกครั้งเพื่อเล่นต่อ)">❚❚</button>
     <button id="rew" aria-label="กรอกลับ" title="กดค้างเพื่อกรอกลับ">◀◀</button>
@@ -133,6 +132,21 @@
   <div class="meta">
     <span class="count"><span class="counter" id="counter" aria-hidden="true"></span>
       <button class="zero" id="zero" aria-label="รีเซ็ตตัวนับ" title="รีเซ็ตตัวนับ"></button></span>
+  </div>
+  </section>
+
+  <section class="settings" aria-label="การตั้งค่า">
+  <div class="row">
+    <input type="text" id="url" aria-label="ลิงก์ YouTube" placeholder="ลิงก์ YouTube — หรือลากไฟล์เสียงมาวาง">
+    <button class="load" id="load">ใส่เทป</button>
+    <button class="load" id="pick" title="เลือกไฟล์เสียงจากเครื่อง (ได้เสียงเทปยานของจริง)">ไฟล์</button>
+    <input type="file" id="file" accept="audio/*" hidden>
+  </div>
+  <div class="msgrow"><div class="msg" id="msg" role="status"></div>
+    <span class="count"><label title="ระหว่างเล่น เทปอาจขาดได้ทุกเมื่อ — เพลงจะเงียบไปพักนึงแล้วค่อยๆ ดังกลับมาเอง"><input type="checkbox" id="snap" checked> ✂ เทปขาดแบบสุ่ม</label>
+    <label title="ตอนวนซ้ำ ไม่ต้องรอกรอกลับ — กลับไปต้นม้วนแล้วเล่นเลย"><input type="checkbox" id="skip" disabled> ข้ามการกรอกลับ</label></span></div>
+
+  <div class="meta">
     <label>เสียงซ่า <input type="range" id="hiss" min="0" max="100" value="35"></label>
     <label title="เสียงแกว่งแบบเทปยาน — ใช้ได้กับไฟล์เสียงเท่านั้น">เทปยาน <input type="range" id="wow" min="0" max="100" value="50" disabled></label>
     <label title="เสียงทึบ อิ่มตัว และวูบหายแบบเทปเก่า — ใช้ได้กับไฟล์เสียงเท่านั้น">ความเก่า <input type="range" id="age" min="0" max="100" value="60" disabled></label>
@@ -141,6 +155,7 @@
   </div>
 
   <div class="monitor" id="monitor"><div id="yt"></div></div>
+  </section>
 </div>
 
 <script>
