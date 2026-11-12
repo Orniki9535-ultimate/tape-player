@@ -48,10 +48,21 @@
   .row { display:flex; gap:10px; margin-top:16px; }
   input[type=text] { flex:1; min-width:0; padding:10px 12px; border-radius:8px; border:0; background:#1b1714; color:var(--cream);
                      font-family:'Courier Prime'; box-shadow:inset 0 2px 6px #000; }
-  .keys { display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin-top:16px; }
+  .keys { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-top:16px; }
   button { font:inherit; cursor:pointer; border:0; border-radius:6px; padding:12px 0; color:#222; font-weight:700; touch-action:none;
            background:linear-gradient(#ddd,#a9a9a9); box-shadow:0 5px 0 #555, 0 6px 8px #0008; transition:transform .05s, box-shadow .05s; }
   button:active, button.down { transform:translateY(4px); box-shadow:0 1px 0 #555; }
+  /* LOOP key: latches down with a green lamp; the arrow spins while the deck auto-rewinds */
+  #loop { position:relative; }
+  #loop .lamp { position:absolute; top:4px; right:4px; width:6px; height:6px; border-radius:50%; background:#152; }
+  #loop[aria-pressed=true] { transform:translateY(4px); box-shadow:0 1px 0 #555; }
+  #loop[aria-pressed=true] .lamp { background:#5f5; box-shadow:0 0 6px #5f5; }
+  #loop b { display:inline-block; }
+  .looping #loop b { animation:spin .5s linear infinite reverse; }
+  .looping .label { animation:flash .5s ease-in-out infinite alternate; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  @keyframes flash { to { filter:brightness(1.15) sepia(.3); } }
+  @media (prefers-reduced-motion: reduce) { .looping #loop b, .looping .label { animation:none; } }
   button.load { background:linear-gradient(var(--mustard),#b4851f); padding:10px 16px; white-space:nowrap; }
   label:has(:disabled) { opacity:.35; }
   .deck.drop { outline:3px dashed var(--mustard); outline-offset:8px; }
@@ -103,6 +114,7 @@
     <button id="ff" aria-label="กรอไปข้างหน้า" title="กดค้างเพื่อกรอไปข้างหน้า">▶▶</button>
     <button id="next" aria-label="เพลงถัดไป" title="เพลงถัดไป (เพลย์ลิสต์)">⏭&#xFE0E;</button>
     <button id="stop" aria-label="หยุด / ดีดเทปออก" title="หยุด — กดตอนหยุดอยู่เพื่อดีดเทปออก">■ ⏏&#xFE0E;</button>
+    <button id="loop" aria-label="เล่นวนซ้ำ" aria-pressed="false" title="วนซ้ำ — เล่นจบม้วนแล้วกรอกลับไปเล่นใหม่เอง"><b>↻</b><i class="lamp"></i></button>
   </div>
 
   <div class="meta">
@@ -130,6 +142,7 @@ let want = null;             // { list, vid }: a playlist link that points at on
 let src, loaded = false;     // src: where the music comes from (yt | file); loaded: a cassette is in the well
 let state = 'stop';          // 'stop' | 'play' | 'pause' — the deck's keys, not YouTube's state
 let wind = 0, wasPlaying = false, preroll = 0, settle = 0;
+let autoRew = false;         // LOOP is rewinding the tape by itself, to play it again
 let pos = 0, zero = 0;       // tape position (s) as shown by reels + counter; counter zero point
 
 // ---- YouTube ----
@@ -167,6 +180,7 @@ const yt = {   // YouTube's audio lives in a cross-origin iframe: we can start, 
   preroll: PREROLL,
   play: () => player.playVideo(), pause: () => player.pauseVideo(), eject: () => player.stopVideo(),
   wind: () => player.pauseVideo(), next: () => player.nextVideo(), vol: v => player.setVolume(v),
+  first: () => (player.getPlaylist() || []).length > 1 && player.playVideoAt(0),   // LOOP replays a playlist from track 1
   seek(t, go) { player.seekTo(t, true); go ? player.playVideo() : player.pauseVideo(); },   // seekTo can start playback on its own
   time: () => player.getCurrentTime() || 0, dur: () => player.getDuration() || 0, playing: () => ytPlaying,
 };
@@ -286,7 +300,7 @@ const file = {
   seek(t, go) { audio.currentTime = t; go ? this.play() : audio.pause(); },
   eject() { audio.pause(); URL.revokeObjectURL(audio.src); audio.removeAttribute('src'); },
   vol(v) { this.v = v / 100; if (fx) fx.out.gain.value = this.v; },
-  next() {}, time: () => audio.currentTime, dur: () => audio.duration || 0, playing: () => false,
+  next() {}, first() {}, time: () => audio.currentTime, dur: () => audio.duration || 0, playing: () => false,
 };
 audio.onended = () => { if (!wind && loaded) ended(); };
 audio.onerror = () => { if (loaded && src === file) { show('stop'); msg('เปิดไฟล์นี้ไม่ได้ ลองไฟล์เสียงอื่นนะ'); } };
@@ -307,10 +321,18 @@ function show(s) {   // latch the keys to match the deck state
   $('deck').classList.toggle('on', s === 'play');
   s === 'play' ? hissOn() : hissOff();
 }
-const ended = () => { show('stop'); clunk(); };   // end of tape: auto-stop
+const loopOn = () => $('loop').getAttribute('aria-pressed') === 'true';
+function ended() {   // end of tape: auto-stop — and with LOOP on, rewind by itself and play again
+  show('stop'); clunk();
+  if (loopOn()) setTimeout(() => {
+    if (state !== 'stop' || !loaded || wind || !loopOn()) return;
+    autoRew = true; windStart(-1); msg('↻ กรอกลับไปเล่นใหม่...');
+  }, 600);
+}
 const noTape = () => msg('ยังไม่ได้ใส่เทป');
 function play() {
   if (!loaded) return noTape();
+  if (wind) windEnd();   // PLAY during the LOOP rewind: play from here
   if (state === 'play') return;
   const d = src.dur();
   if (d && pos >= d - 1) return msg('สุดม้วนแล้ว กรอกลับก่อนนะ');
@@ -325,6 +347,7 @@ function pause() {
 }
 function stop() {   // STOP/EJECT is one key, like a real deck
   clearTimeout(preroll);
+  if (wind) return windEnd();   // STOP during the LOOP rewind cancels it (doesn't eject mid-wind)
   if (state !== 'stop') { src.pause(); return show('stop'); }
   if (!loaded) return;
   loaded = false; src.eject(); $('well').classList.add('out');
@@ -359,15 +382,19 @@ function windStart(dir) {
   wasPlaying = state === 'play'; wind = dir;
   src.wind(dir, windRate()); hissOff(); whirOn();
   $(dir < 0 ? 'rew' : 'ff').classList.add('down'); $('cassette').classList.add('winding');
+  $('deck').classList.toggle('looping', autoRew);
 }
 function windEnd(hitEnd) {
   if (!wind) return;
+  const again = autoRew && hitEnd; autoRew = false;
   wind = 0; whirOff();
   $('rew').classList.remove('down'); $('ff').classList.remove('down'); $('cassette').classList.remove('winding');
+  $('deck').classList.remove('looping');
   settle = performance.now() + 1500;
   const d = src.dur(), go = wasPlaying && !hitEnd;
   src.seek(d ? Math.min(pos, d - 0.5) : pos, go);
   if (hitEnd) { show('stop'); clunk(); } else if (go) hissOn();
+  if (again) setTimeout(() => { if (state === 'stop' && loaded && loopOn()) { src.first(); play(); } }, 500);
 }
 
 const key = fn => () => { clunk(); fn(); };
@@ -383,6 +410,8 @@ const deck = $('deck');   // drag a file onto the deck
 deck.ondragover = e => { e.preventDefault(); deck.classList.add('drop'); };
 deck.ondragleave = () => deck.classList.remove('drop');
 deck.ondrop = e => { e.preventDefault(); deck.classList.remove('drop'); clunk(); loadFile(e.dataTransfer.files[0]); };
+$('loop').onclick  = key(() => { const on = !loopOn(); $('loop').setAttribute('aria-pressed', on); save('loop', on); });
+if (saved('loop') === 'true') $('loop').setAttribute('aria-pressed', true);
 $('zero').onclick  = () => { clunk(); zero = pos; };
 for (const [id, dir] of [['rew', -1], ['ff', 1]]) {   // hold to wind
   const b = $(id), down = key(() => windStart(dir)), up = () => windEnd();
