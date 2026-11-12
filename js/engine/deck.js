@@ -42,8 +42,9 @@ function ytEvent(s) {
     curTitle = v.title; swap ? swapTape(v.title, v.video_id) : (view.title(v.title), view.stripes(v.video_id));
   }
   const busy = wind || performance.now() < settle;       // we caused this event ourselves
-  if (s === 1 && state !== 'play') return busy ? yt.pause() : show('play');   // user clicked inside the monitor; or YouTube
-                                                                              // finished buffering after we paused it: pause again
+  // the keys rule: YouTube playing while the deck isn't (it finished buffering after STOP/PAUSE, however long that
+  // took, or the user clicked the video) gets paused again. Only PLAY starts the tape.
+  if (s === 1 && state !== 'play') return yt.pause();
   if (s === 2 && state === 'play' && !busy) show('pause');
   if (s === 0 && yt.lastTrack()) ended();
 }
@@ -83,12 +84,12 @@ function play() {
 function pause() {
   if (state === 'stop') return;
   if (state === 'pause') return play();
-  clearTimeout(preroll); settle = performance.now() + 1500; src.pause(); show('pause');
+  clearTimeout(preroll); src.pause(); show('pause');
 }
 function stop() {   // STOP/EJECT is one key, like a real deck
   clearTimeout(preroll);
   if (wind) return windEnd();   // STOP during the LOOP rewind cancels it (doesn't eject mid-wind)
-  if (state !== 'stop') { settle = performance.now() + 1500; src.pause(); return show('stop'); }   // settle: YouTube's late events are ours
+  if (state !== 'stop') { src.pause(); return show('stop'); }
   if (!loaded) return;
   loaded = false; src.eject(); view.well(true); view.screen(false); view.msg('');
 }
