@@ -25,11 +25,12 @@
               transition:transform .45s cubic-bezier(.3,1.2,.6,1); }
   .out .cassette { transform:translateY(-115%); transition-timing-function:ease-in; }
   .label { height:100%; background:var(--cream); border-radius:6px; position:relative; overflow:hidden;
-           background-image:linear-gradient(var(--orange) 0 14%, var(--mustard) 14% 22%, transparent 22%); }
+           --s1:var(--orange); --s2:var(--mustard); --s3:var(--mustard);   /* stripes: tint() sets them from the video thumbnail */
+           background-image:linear-gradient(var(--s1) 0 14%, var(--s2) 14% 18%, var(--s3) 18% 22%, transparent 22%); }
   .title { position:absolute; top:24%; left:6%; right:6%; font-family:'Mali'; font-weight:700; color:#3a2a1c;
            font-size:clamp(12px,3.4vw,17px); white-space:nowrap; overflow:hidden; border-bottom:1px dashed #a99; padding-bottom:2px; }
   .title span { display:inline-block; }
-  .side { position:absolute; top:2%; left:4%; font:700 13px 'Courier Prime'; color:#fff; }
+  .side { position:absolute; top:2%; left:4%; font:700 13px 'Courier Prime'; color:var(--ink,#fff); }
   .window { position:absolute; left:22%; right:22%; top:42%; height:36%; background:#2a2420; border-radius:40px; overflow:hidden;
             display:flex; justify-content:space-between; align-items:center; padding:0 6%; }
   .reel { position:relative; width:22%; aspect-ratio:1; display:grid; place-items:center; }
@@ -231,7 +232,7 @@ window.onYouTubeIframeAPIReady = () => {
         }
         ytPlaying = e.data === 1;
         const v = player.getVideoData();
-        if (loaded && v.title && v.title !== curTitle) setTitle(curTitle = v.title);
+        if (loaded && v.title && v.title !== curTitle) { setTitle(curTitle = v.title); tint(v.video_id); }
         const busy = wind || performance.now() < settle;       // we caused this event ourselves
         if (e.data === 1 && state !== 'play' && !busy) show('play');   // user clicked inside the monitor
         if (e.data === 2 && state === 'play' && !busy) show('pause');
@@ -250,6 +251,38 @@ const yt = {   // YouTube's audio lives in a cross-origin iframe: we can start, 
   seek(t, go) { player.seekTo(t, true); go ? player.playVideo() : player.pauseVideo(); },   // seekTo can start playback on its own
   time: () => player.getCurrentTime() || 0, dur: () => player.getDuration() || 0, playing: () => ytPlaying,
 };
+
+// label stripes: 2-3 random picks from the thumbnail's main colours (no video -> the stock orange/mustard)
+function palette(img) {   // the most common, clearly different colours, most common first
+  const c = document.createElement('canvas'), g = c.getContext('2d'), W = c.width = 40, H = c.height = 23;
+  g.drawImage(img, 0, 0, W, H);
+  const d = g.getImageData(0, 0, W, H).data, bins = new Map();   // throws if the image has no CORS headers
+  for (let i = 0; i < d.length; i += 4) {   // bucket pixels into 8 levels per channel, average each bucket
+    const k = d[i] >> 5 << 6 | d[i+1] >> 5 << 3 | d[i+2] >> 5, b = bins.get(k) || bins.set(k, [0, 0, 0, 0]).get(k);
+    b[0] += d[i]; b[1] += d[i+1]; b[2] += d[i+2]; b[3]++;
+  }
+  const out = [];
+  for (const [r, g, b, n] of [...bins.values()].sort((a, b) => b[3] - a[3]))
+    if (out.length < 6 && out.every(o => Math.hypot(o[0] - r/n, o[1] - g/n, o[2] - b/n) > 60)) out.push([r/n, g/n, b/n]);
+  return out.map(([r, g, b]) => `rgb(${r|0},${g|0},${b|0})`);
+}
+function tint(id) {
+  const lab = document.querySelector('.label').style, vars = ['--s1', '--s2', '--s3', '--ink'];
+  tint.id = id;
+  if (!id) return vars.forEach(v => lab.removeProperty(v));
+  const img = new Image(); img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    if (tint.id !== id) return;   // a newer tape went in meanwhile
+    try {
+      const cs = palette(img).sort(() => Math.random() - 0.5).slice(0, 2 + (Math.random() < 0.5));
+      if (cs.length < 2) return;
+      vars.slice(0, 3).forEach((v, i) => lab.setProperty(v, cs[Math.min(i, cs.length - 1)]));   // 2 colours: last stripe repeats
+      const [r, g, b] = cs[0].match(/\d+/g);   // side letter sits on the top stripe: keep it readable
+      lab.setProperty('--ink', .299*r + .587*g + .114*b > 150 ? '#3a2a1c' : '#fff');
+    } catch { tint(); }   // canvas blocked: keep the stock stripes
+  };
+  img.src = `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
+}
 
 function setTitle(t) {
   const el = $('title'); el.textContent = t || '...';
@@ -443,7 +476,7 @@ function insert(next, cue) {   // cue only: a tape doesn't play until you press 
   const c = $('well'), swap = c.classList.contains('out') ? 0 : 450;   // old tape slides out first
   c.classList.add('out');
   setTimeout(() => {
-    src = next; setTitle(curTitle = ''); $('ab').setAttribute('aria-pressed', false); cue(); src.vol($('vol').value);
+    src = next; setTitle(curTitle = ''); tint(); $('ab').setAttribute('aria-pressed', false); cue(); src.vol($('vol').value);
     $('monitor').hidden = src === file;                                  // monitor is YouTube-only,
     for (const id of ['wow', 'age', 'ab']) $(id).disabled = src !== file;   // sound-bending controls are file-only
     snapAt = 0; $('cassette').classList.remove('broken');   // a fresh tape (the snapped one leaves with its strand showing)
