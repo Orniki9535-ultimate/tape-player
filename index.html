@@ -78,7 +78,10 @@
   /* YouTube's terms: the player must stay visible, unobscured and at least 200x200 — so it's a small "monitor" */
   .monitor { margin-top:16px; border-radius:8px; overflow:hidden; width:200px; height:200px; box-shadow:0 0 0 3px #111; }
   .monitor iframe, #yt { width:100%; height:100%; display:block; }
-  .msg { font-size:12px; color:#c88; min-height:16px; margin-top:6px; }
+  .msgrow { display:flex; justify-content:space-between; align-items:center; gap:8px; min-height:26px; margin-top:4px; }
+  .msg { font-size:12px; color:#c88; }
+  .msgrow label { display:flex; align-items:center; gap:4px; font-size:12px; color:#b9ab90; white-space:nowrap; cursor:pointer; }
+  #skip { accent-color:var(--orange); margin:0; }
 </style>
 </head>
 <body>
@@ -105,7 +108,8 @@
     <button class="load" id="pick" title="เลือกไฟล์เสียงจากเครื่อง (ได้เสียงเทปยานของจริง)">ไฟล์</button>
     <input type="file" id="file" accept="audio/*" hidden>
   </div>
-  <div class="msg" id="msg" role="status"></div>
+  <div class="msgrow"><div class="msg" id="msg" role="status"></div>
+    <label title="ตอนวนซ้ำ ไม่ต้องรอกรอกลับ — กลับไปต้นม้วนแล้วเล่นเลย"><input type="checkbox" id="skip" disabled> ข้ามการกรอกลับ</label></div>
 
   <div class="keys">
     <button id="pause" aria-label="พัก" title="พัก (กดอีกครั้งเพื่อเล่นต่อ)">❚❚</button>
@@ -327,6 +331,7 @@ function ended() {   // end of tape: auto-stop — and with LOOP on, rewind by i
   if (loopOn()) setTimeout(() => {
     if (state !== 'stop' || !loaded || wind || !loopOn()) return;
     autoRew = true; windStart(-1); msg('↻ กรอกลับไปเล่นใหม่...');
+    if ($('skip').checked) skipRew();
   }, 600);
 }
 const noTape = () => msg('ยังไม่ได้ใส่เทป');
@@ -410,8 +415,12 @@ const deck = $('deck');   // drag a file onto the deck
 deck.ondragover = e => { e.preventDefault(); deck.classList.add('drop'); };
 deck.ondragleave = () => deck.classList.remove('drop');
 deck.ondrop = e => { e.preventDefault(); deck.classList.remove('drop'); clunk(); loadFile(e.dataTransfer.files[0]); };
-$('loop').onclick  = key(() => { const on = !loopOn(); $('loop').setAttribute('aria-pressed', on); save('loop', on); });
-if (saved('loop') === 'true') $('loop').setAttribute('aria-pressed', true);
+const setLoop = on => { $('loop').setAttribute('aria-pressed', on); $('skip').disabled = !on; };   // skip only means something with LOOP on
+$('loop').onclick  = key(() => { setLoop(!loopOn()); save('loop', loopOn()); });
+setLoop(saved('loop') === 'true');
+const skipRew = () => { if (autoRew) { pos = 0; windEnd(true); } };   // jump to the start, replay as usual
+$('skip').onchange = () => { save('skip', $('skip').checked); if ($('skip').checked) skipRew(); };   // ticking it mid-rewind skips now
+$('skip').checked = saved('skip') === 'true';
 $('zero').onclick  = () => { clunk(); zero = pos; };
 for (const [id, dir] of [['rew', -1], ['ff', 1]]) {   // hold to wind
   const b = $(id), down = key(() => windStart(dir)), up = () => windEnd();
