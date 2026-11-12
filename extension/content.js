@@ -1,4 +1,4 @@
-// STAGE 0 TEST: fixed tape sound (wow 0.5, age 0.6) on the YouTube player's <video>, only when that
+// STAGE 0 TEST: fixed tape sound (wow 1, age 1: both sliders at max) on the YouTube player's <video>, only when that
 // player is embedded in the Tape Deck app. No controls yet: this only answers "can we hear it at all?".
 // Everything it finds goes to the console, prefixed [tapeDeck].
 (() => {
@@ -23,7 +23,7 @@
     }
     const src = ctx.createMediaElementSource(v), fx = buildFx(ctx, src);
     fx.out.connect(ctx.destination);
-    setFx(fx, { wow: 0.5, age: 0.6, bypass: false });
+    setFx(fx, { wow: 1, age: 1, bypass: false });   // the sliders at max
     const inMeter = meter(src), outMeter = meter(fx.out);
     log('hooked a <video>, AudioContext state =', ctx.state);
     v.addEventListener('play', () => ctx.resume().then(() => log('video play -> AudioContext state =', ctx.state)));

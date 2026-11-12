@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Tape Deck FX (test)",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Stage-0 test: puts the tape deck's worn-tape sound on YouTube videos played inside the Tape Deck app.",
   "content_scripts": [{
     "matches": ["https://www.youtube.com/embed/*", "https://www.youtube-nocookie.com/embed/*"],
