@@ -1,126 +1,19 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>เครื่องเล่นเทป</title>
+<title>Cassette Player</title>
 <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@700&family=Mali:wght@500;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-<style>
-  :root { --wood:#5a3a22; --body:#2b2622; --cream:#efe4cc; --orange:#e0782f; --mustard:#d9a93a; }
-  * { box-sizing:border-box; }
-  body { margin:0; min-height:100vh; display:grid; place-items:center; padding:24px;
-         background:radial-gradient(circle at 30% 20%, #3b2f27, #16120f); font-family:'Mali',sans-serif; color:var(--cream); }
-  .deck { width:min(1000px,100%); display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:0 26px; align-items:start; background:linear-gradient(#3a332d,var(--body)); border-radius:18px; padding:22px;
-          box-shadow:0 0 0 6px var(--wood), 0 20px 50px #000a, inset 0 1px 0 #fff2; }
-  .brand { grid-column:1/-1; display:flex; justify-content:space-between; align-items:center; font-family:'Courier Prime',monospace;
-           letter-spacing:3px; font-size:13px; color:#b9ab90; margin-bottom:14px; }
-  .led { width:10px; height:10px; border-radius:50%; background:#511; display:inline-block; margin-right:6px; }
-  .on .led { background:#f33; box-shadow:0 0 8px #f33; }
-
-  /* cassette */
-  .well { position:relative; overflow:hidden; background:#111; border-radius:10px; padding:14px; box-shadow:inset 0 4px 12px #000; }
-  .empty { position:absolute; inset:0; display:grid; place-items:center; font:700 13px 'Courier Prime'; letter-spacing:3px; color:#4a443c; }
-  .cassette { position:relative; aspect-ratio:1.6; background:linear-gradient(#cfc3a8,#b8ab8f); border-radius:10px; padding:7% 6%;
-              transition:transform .45s cubic-bezier(.3,1.2,.6,1); }
-  .out .cassette { transform:translateY(-115%); transition-timing-function:ease-in; }
-  .label { height:100%; background:var(--cream); border-radius:6px; position:relative; overflow:hidden;
-           --s1:var(--orange); --s2:var(--mustard); --s3:var(--mustard);   /* stripes: tint() sets them from the video thumbnail */
-           background-image:linear-gradient(var(--s1) 0 14%, var(--s2) 14% 18%, var(--s3) 18% 22%, transparent 22%); }
-  .title { position:absolute; top:24%; left:6%; right:6%; font-family:'Mali'; font-weight:700; color:#3a2a1c;
-           font-size:clamp(12px,3.4vw,17px); white-space:nowrap; overflow:hidden; border-bottom:1px dashed #a99; padding-bottom:2px; }
-  .title span { display:inline-block; }
-  .side { position:absolute; top:2%; left:4%; font:700 13px 'Courier Prime'; color:var(--ink,#fff); }
-  .window { position:absolute; left:22%; right:22%; top:42%; height:36%; background:#2a2420; border-radius:40px; overflow:hidden;
-            display:flex; justify-content:space-between; align-items:center; padding:0 6%; }
-  .reel { position:relative; width:22%; aspect-ratio:1; display:grid; place-items:center; }
-  .tape { position:absolute; border-radius:50%; background:#3b2516; box-shadow:inset 0 0 0 1px #5a3a22; }
-  .hub { position:relative; width:52%; aspect-ratio:1; border-radius:50%;
-         background:repeating-conic-gradient(#eee 0 30deg,#999 30deg 60deg); border:3px solid #ddd; }
-  .hub::after { content:""; position:absolute; inset:30%; border-radius:50%; background:#2a2420; }
-  .winding .hub { filter:blur(1px); }
-  .screws::before, .screws::after { content:""; position:absolute; width:8px; height:8px; border-radius:50%; background:#8a7f6a; bottom:5%; }
-  .screws::before { left:4%; } .screws::after { right:4%; }
-
-  button.mini { padding:4px 10px; font:700 11px 'Courier Prime'; letter-spacing:1px; border-radius:4px; box-shadow:0 3px 0 #555; }
-  button:disabled { opacity:.35; cursor:default; }
-  button.mini[aria-pressed=true] { transform:translateY(2px); box-shadow:0 1px 0 #555; background:linear-gradient(var(--mustard),#b4851f); }
-
-  /* controls */
-  .row { display:flex; flex-wrap:wrap; gap:10px; }
-  .row #url { flex:10 1 200px; } .btns { flex:1 0 auto; display:flex; gap:10px; } .btns .load { flex:1; }   /* both buttons drop under the link together on narrow screens */
-  input[type=text] { flex:1; min-width:0; padding:10px 12px; border-radius:8px; border:0; background:#1b1714; color:var(--cream);
-                     font-family:'Courier Prime'; box-shadow:inset 0 2px 6px #000; }
-  .keys { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-top:16px; }
-  button { font:inherit; cursor:pointer; border:0; border-radius:6px; padding:12px 0; color:#222; font-weight:700; touch-action:none;
-           background:linear-gradient(#ddd,#a9a9a9); box-shadow:0 5px 0 #555, 0 6px 8px #0008; transition:transform .05s, box-shadow .05s; }
-  button:active, button.down { transform:translateY(4px); box-shadow:0 1px 0 #555; }
-  /* LOOP key: latches down with a green lamp; the arrow spins while the deck auto-rewinds */
-  .keys .bi { font-size:20px; line-height:1; vertical-align:middle; }
-  #stop .bi { font-size:17px; margin:0 1px; }   /* two icons share one key */
-  #loop { position:relative; }
-  #loop .lamp { position:absolute; top:4px; right:4px; width:6px; height:6px; border-radius:50%; background:#152; }
-  #loop[aria-pressed=true] { transform:translateY(4px); box-shadow:0 1px 0 #555; }
-  #loop[aria-pressed=true] .lamp { background:#5f5; box-shadow:0 0 6px #5f5; }
-  #loop b { display:inline-block; }
-  .looping #loop b { animation:spin .5s linear infinite reverse; }
-  /* snapped tape: a loose strand flaps in the window, the cassette jolts */
-  .strand { position:absolute; inset:0; width:100%; height:100%; display:none; fill:none; stroke:#9a6034; stroke-width:3; stroke-linecap:round; }
-  .broken .strand { display:block; transform-origin:78% 50%; animation:sway 1.4s ease-in-out infinite alternate; }
-  .cassette.broken { animation:jolt .35s; }
-  @keyframes sway { to { transform:rotate(8deg); } }
-  @keyframes jolt { 25% { transform:translate(-4px,2px) rotate(-1.2deg); } 60% { transform:translate(3px,-1px) rotate(.8deg); } }
-  .looping .label { animation:flash .5s ease-in-out infinite alternate; }
-  @keyframes spin { to { transform:rotate(360deg); } }
-  @keyframes flash { to { filter:brightness(1.15) sepia(.3); } }
-  @media (prefers-reduced-motion: reduce) { .looping #loop b, .looping .label, .broken .strand, .cassette.broken { animation:none; } }
-  button.load { background:linear-gradient(var(--mustard),#b4851f); padding:10px 16px; white-space:nowrap; }
-  label:has(:disabled) { opacity:.35; }
-  .deck.drop { outline:3px dashed var(--mustard); outline-offset:8px; }
-  .meta { display:flex; justify-content:space-between; align-items:center; margin-top:16px; gap:12px; font-size:13px; color:#b9ab90; flex-wrap:wrap; }
-  .count { display:flex; align-items:center; gap:8px; }
-  .counter { display:flex; gap:2px; background:#000; padding:4px 5px; border-radius:4px; font:700 18px/1.2 'Courier Prime'; color:#eee; }
-  .counter i { display:block; height:1.2em; overflow:hidden; font-style:normal; padding:0 4px; border-radius:2px;
-               background:linear-gradient(#000,#333 45%,#333 55%,#000); }
-  .counter b { display:block; }
-  button.zero { width:18px; height:18px; padding:0; border-radius:3px; background:#222; box-shadow:0 3px 0 #000; }
-  input[type=range] { accent-color:var(--orange); width:100%; margin:0; }
-  /* YouTube's terms: the player must stay visible, unobscured and at least 200x200 — so it's a small "monitor" */
-  .monitor { border-radius:8px; overflow:hidden; width:200px; height:200px; box-shadow:0 0 0 3px #111; }
-  .monitor iframe, #yt { width:100%; height:100%; display:block; }
-  .msg { font-size:12px; color:#e9a08a; margin-top:8px; } .msg:empty { display:none; }
-  .count small { font:700 10px 'Courier Prime'; letter-spacing:2px; color:#8f846f; }
-  /* settings: one inset panel per topic */
-  .settings { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; }
-  .group { background:#0003; border:1px solid #fff1; border-radius:12px; padding:12px 14px 14px; box-shadow:inset 0 1px 0 #fff1; }
-  .group h2 { display:flex; align-items:center; gap:8px; margin:0 0 10px; font:700 12px 'Mali'; letter-spacing:.5px; color:#d6c9ac; }
-  .group h2 .mini { margin-left:auto; }
-  .tag { font-size:10px; font-weight:500; color:#8f846f; border:1px solid #fff2; border-radius:20px; padding:1px 8px; }
-  .sliders { display:grid; grid-template-columns:1fr 1fr; gap:10px 18px; }
-  .sliders label { display:flex; flex-direction:column; gap:6px; font-size:13px; color:#b9ab90; }
-  .switch { display:flex; align-items:center; gap:10px; font-size:13px; color:#b9ab90; cursor:pointer; padding:4px 0; }
-  .switch input { appearance:none; flex:none; position:relative; width:36px; height:20px; margin:0; border-radius:10px; cursor:inherit;
-                  background:#1b1714; box-shadow:inset 0 2px 5px #000; transition:background .2s; }
-  .switch input::before { content:""; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%;
-                          background:linear-gradient(#eee,#aaa); box-shadow:0 1px 3px #000a; transition:transform .2s; }
-  .switch input:checked { background:var(--orange); }
-  .switch input:checked::before { transform:translateX(16px); }
-  .screen:has(#monitor[hidden]) { display:none; }   /* monitor is YouTube-only */
-  .screen .monitor { margin-inline:auto; }
-  button:hover:not(:disabled) { filter:brightness(1.08); }
-  :focus-visible { outline:2px solid var(--mustard); outline-offset:2px; }
-  @media (max-width:760px) {
-    body { padding:12px; place-items:start center; }
-    .deck { grid-template-columns:minmax(0,1fr); padding:16px; }
-    .settings { margin-top:18px; }
-  }
-</style>
+<link href="style.css" rel="stylesheet">
 </head>
 <body>
 <div class="deck" id="deck">
-  <div class="brand"><span><i class="led"></i>STEREO CASSETTE DECK</span><span>Orniki - 9535</span></div>
+  <div class="brand"><span><i class="led"></i>STEREO CASSETTE DECK</span>
+    <span class="brand-r"><button class="lang" id="lang" data-t-aria="language"><span data-l="en">EN</span><span data-l="th">TH</span></button>Orniki - 9535</span></div>
 
-  <section class="tapeside" aria-label="เทป">
+  <section class="tapeside" data-t-aria="tapeSection">
   <div class="well out" id="well">
     <div class="empty">NO TAPE</div>
     <div class="cassette screws" id="cassette">
@@ -138,496 +31,70 @@
   </div>
 
   <div class="keys">
-    <button id="pause" aria-label="พัก" title="พัก (กดอีกครั้งเพื่อเล่นต่อ)"><i class="bi bi-pause-fill" aria-hidden="true"></i></button>
-    <button id="rew" aria-label="กรอกลับ" title="กดค้างเพื่อกรอกลับ"><i class="bi bi-rewind-fill" aria-hidden="true"></i></button>
-    <button id="play" aria-label="เล่น" title="เล่น"><i class="bi bi-play-fill" aria-hidden="true"></i></button>
-    <button id="ff" aria-label="กรอไปข้างหน้า" title="กดค้างเพื่อกรอไปข้างหน้า"><i class="bi bi-fast-forward-fill" aria-hidden="true"></i></button>
-    <button id="next" aria-label="เพลงถัดไป" title="เพลงถัดไป (เพลย์ลิสต์)"><i class="bi bi-skip-end-fill" aria-hidden="true"></i></button>
-    <button id="stop" aria-label="หยุด / ดีดเทปออก" title="หยุด — กดตอนหยุดอยู่เพื่อดีดเทปออก"><i class="bi bi-stop-fill" aria-hidden="true"></i><i class="bi bi-eject-fill" aria-hidden="true"></i></button>
-    <button id="loop" aria-label="เล่นวนซ้ำ" aria-pressed="false" title="วนซ้ำ — เล่นจบม้วนแล้วกรอกลับไปเล่นใหม่เอง"><b><i class="bi bi-arrow-repeat" aria-hidden="true"></i></b><i class="lamp"></i></button>
+    <button id="pause" data-t-aria="pause" data-t-title="pauseTip"><i class="bi bi-pause-fill" aria-hidden="true"></i></button>
+    <button id="rew" data-t-aria="rew" data-t-title="rewTip"><i class="bi bi-rewind-fill" aria-hidden="true"></i></button>
+    <button id="play" data-t-aria="play" data-t-title="play"><i class="bi bi-play-fill" aria-hidden="true"></i></button>
+    <button id="ff" data-t-aria="ff" data-t-title="ffTip"><i class="bi bi-fast-forward-fill" aria-hidden="true"></i></button>
+    <button id="next" data-t-aria="next" data-t-title="nextTip"><i class="bi bi-skip-end-fill" aria-hidden="true"></i></button>
+    <button id="stop" data-t-aria="stop" data-t-title="stopTip"><i class="bi bi-stop-fill" aria-hidden="true"></i><i class="bi bi-eject-fill" aria-hidden="true"></i></button>
+    <button id="loop" data-t-aria="loop" data-t-title="loopTip" aria-pressed="false"><b><i class="bi bi-arrow-repeat" aria-hidden="true"></i></b><i class="lamp"></i></button>
   </div>
 
   <div class="meta">
     <span class="count"><small>COUNTER</small><span class="counter" id="counter" aria-hidden="true"></span>
-      <button class="zero" id="zero" aria-label="รีเซ็ตตัวนับ" title="รีเซ็ตตัวนับ"></button></span>
+      <button class="zero" id="zero" data-t-aria="zero" data-t-title="zero"></button></span>
   </div>
   </section>
 
-  <section class="settings" aria-label="การตั้งค่า">
+  <section class="settings" data-t-aria="settingsSection">
   <div class="group">
-    <h2>ใส่เทป</h2>
+    <h2 data-t="hLoad"></h2>
     <div class="row">
-      <input type="text" id="url" aria-label="ลิงก์ YouTube" placeholder="วางลิงก์ YouTube หรือลากไฟล์เสียงมาวาง">
-      <span class="btns"><button class="load" id="load">ใส่เทป</button>
-      <button class="load" id="pick" title="เลือกไฟล์เสียงจากเครื่อง (ได้เสียงเทปยานของจริง)">ไฟล์</button></span>
+      <input type="text" id="url" data-t-aria="url" data-t-ph="urlHint">
+      <span class="btns"><button class="load" id="load" data-t="insert"></button>
+      <button class="load" id="pick" data-t="file" data-t-title="fileTip"></button></span>
       <input type="file" id="file" accept="audio/*" hidden>
     </div>
     <div class="msg" id="msg" role="status"></div>
   </div>
 
   <div class="group">
-    <h2>เสียง</h2>
+    <h2 data-t="hSound"></h2>
     <div class="sliders">
-      <label>เสียงเพลง <input type="range" id="vol" min="0" max="100" value="80"></label>
-      <label>เสียงซ่า <input type="range" id="hiss" min="0" max="100" value="35"></label>
+      <label class="has-tip"><span class="lbl"><span data-t="vol"></span> <span class="tip" aria-hidden="true">?</span><span class="tip-text" role="tooltip" id="tip-vol" data-t="tipVol"></span></span> <input type="range" id="vol" min="0" max="100" value="80" aria-describedby="tip-vol"></label>
+      <label class="has-tip"><span class="lbl"><span data-t="hiss"></span> <span class="tip" aria-hidden="true">?</span><span class="tip-text" role="tooltip" id="tip-hiss" data-t="tipHiss"></span></span> <input type="range" id="hiss" min="0" max="100" value="35" aria-describedby="tip-hiss"></label>
     </div>
   </div>
 
   <div class="group">
-    <h2>เสียงเทปเก่า <span class="tag">ไฟล์เสียงเท่านั้น</span> <button class="mini" id="ab" aria-pressed="false" disabled title="กดสลับฟังเสียงต้นฉบับ (ไม่ผ่านเอฟเฟกต์ ไม่มีเสียงซ่า) เทียบกับเสียงผ่านเครื่อง — ใช้ได้กับไฟล์เสียงเท่านั้น">ต้นฉบับ</button></h2>
+    <h2 class="has-tip tip-r"><span data-t="hOld"></span> <span class="tag" data-t="filesOnly"></span>
+      <button class="mini" id="ab" aria-pressed="false" disabled data-t="ab" aria-describedby="tip-ab"></button><span class="tip" aria-hidden="true">?</span><span class="tip-text" role="tooltip" id="tip-ab" data-t="tipAb"></span></h2>
     <div class="sliders">
-      <label title="เสียงแกว่งแบบเทปยาน — ใช้ได้กับไฟล์เสียงเท่านั้น">เทปยาน <input type="range" id="wow" min="0" max="100" value="50" disabled></label>
-      <label title="เสียงทึบ อิ่มตัว และวูบหายแบบเทปเก่า — ใช้ได้กับไฟล์เสียงเท่านั้น">ความเก่า <input type="range" id="age" min="0" max="100" value="60" disabled></label>
+      <label class="has-tip"><span class="lbl"><span data-t="wow"></span> <span class="tip" aria-hidden="true">?</span><span class="tip-text" role="tooltip" id="tip-wow" data-t="tipWow"></span></span> <input type="range" id="wow" min="0" max="100" value="50" aria-describedby="tip-wow" disabled></label>
+      <label class="has-tip"><span class="lbl"><span data-t="age"></span> <span class="tip" aria-hidden="true">?</span><span class="tip-text" role="tooltip" id="tip-age" data-t="tipAge"></span></span> <input type="range" id="age" min="0" max="100" value="60" aria-describedby="tip-age" disabled></label>
     </div>
   </div>
 
   <div class="group switches">
-    <h2>ตัวเลือก</h2>
-    <label class="switch" title="ระหว่างเล่น เทปอาจขาดได้ทุกเมื่อ — เพลงจะเงียบไปพักนึงแล้วค่อยๆ ดังกลับมาเอง"><input type="checkbox" id="snap" checked> ✂ เทปขาดแบบสุ่ม</label>
-    <label class="switch" title="ตอนวนซ้ำ ไม่ต้องรอกรอกลับ — กลับไปต้นม้วนแล้วเล่นเลย"><input type="checkbox" id="skip" disabled> ข้ามการกรอกลับ</label>
+    <h2 data-t="hOpts"></h2>
+    <label class="switch has-tip"><input type="checkbox" id="snap" checked aria-describedby="tip-snap"> <span data-t="snap"></span> <span class="tip" aria-hidden="true">?</span><span class="tip-text" role="tooltip" id="tip-snap" data-t="tipSnap"></span></label>
+    <label class="switch" data-t-title="skipTip"><input type="checkbox" id="skip" disabled> <span data-t="skip"></span></label>
   </div>
 
   <div class="group screen">
-    <h2>จอ YouTube</h2>
+    <h2 data-t="hYt"></h2>
     <div class="monitor" id="monitor"><div id="yt"></div></div>
   </div>
   </section>
 </div>
 
-<script>
-const $ = id => document.getElementById(id);
-const msg = t => $('msg').textContent = t;
-const PREROLL = 400;   // ms between the PLAY key landing and music starting
-const WIND = 15;       // wind speed, x realtime (long tapes go faster: a full wind never takes > 40 s)
-const windRate = () => Math.max(WIND, src.dur() / 40);
-
-let player, ready = false, ytPlaying = false, curTitle = '';
-let want = null;             // { list, vid }: a playlist link that points at one video inside it
-let src, loaded = false;     // src: where the music comes from (yt | file); loaded: a cassette is in the well
-let state = 'stop';          // 'stop' | 'play' | 'pause' — the deck's keys, not YouTube's state
-let wind = 0, wasPlaying = false, preroll = 0, settle = 0;
-let snapAt = 0, loose = 0;      // snapAt: when the tape snapped (ms); loose: free-spinning take-up reel
-const CUT = 120, GAP = 2500, FADE = 3000;   // ms: tape stretches, then silence, then the music fades back in
-const SNAP_EVERY = 60;       // s of playing between random snaps, on average
-let autoRew = false;         // LOOP is rewinding the tape by itself, to play it again
-let pos = 0, zero = 0;       // tape position (s) as shown by reels + counter; counter zero point
-
-// ---- YouTube ----
-function parse(url) {
-  const list = url.match(/[?&]list=([\w-]+)/);
-  const vid = url.match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-]{11})/) || url.match(/^([\w-]{11})$/);
-  return { list: list && list[1], vid: vid && vid[1] };
-}
-const lastTrack = () => { const pl = player.getPlaylist(); return !pl || player.getPlaylistIndex() >= pl.length - 1; };
-window.onYouTubeIframeAPIReady = () => {
-  player = new YT.Player('yt', {
-    playerVars: { controls: 0, playsinline: 1, rel: 0 },
-    events: {
-      onReady: () => ready = true,
-      onStateChange: e => {
-        if (src !== yt) return;
-        if (e.data === 5 && want) {   // playlist cued: only now can we find the linked video in it, and re-cue there
-          const { list, vid } = want, i = (player.getPlaylist() || []).indexOf(vid); want = null;
-          if (i > 0) { curTitle = ''; return player.cuePlaylist({ list, index: i }); }   // still the first tape, not a swap
-        }
-        if (swapping && e.data === 1) return player.pauseVideo();   // the next track started on its own: wait for the new tape
-        ytPlaying = e.data === 1;
-        const v = player.getVideoData();
-        if (loaded && v.title && v.title !== curTitle) {
-          const swap = curTitle && !wind;   // the playlist moved on (not the first title of a fresh tape)
-          curTitle = v.title; swap ? swapTape(v.title, v.video_id) : (setTitle(v.title), tint(v.video_id));
-        }
-        const busy = wind || performance.now() < settle;       // we caused this event ourselves
-        if (e.data === 1 && state !== 'play' && !busy) show('play');   // user clicked inside the monitor
-        if (e.data === 2 && state === 'play' && !busy) show('pause');
-        if (e.data === 0 && lastTrack()) ended();
-      },
-      onError: () => { show('stop'); msg('เปิดวิดีโอนี้ไม่ได้ (เจ้าของอาจปิดการฝัง) ลองลิงก์อื่นนะ'); }
-    }
-  });
-};
-const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(s);
-const yt = {   // YouTube's audio lives in a cross-origin iframe: we can start, stop and seek it, nothing more
-  preroll: PREROLL,
-  play: () => player.playVideo(), pause: () => player.pauseVideo(), eject: () => player.stopVideo(),
-  wind: () => player.pauseVideo(), next: () => player.nextVideo(), vol: v => player.setVolume(v),
-  first: () => (player.getPlaylist() || []).length > 1 && player.playVideoAt(0),   // LOOP replays a playlist from track 1
-  seek(t, go) { player.seekTo(t, true); go ? player.playVideo() : player.pauseVideo(); },   // seekTo can start playback on its own
-  time: () => player.getCurrentTime() || 0, dur: () => player.getDuration() || 0, playing: () => ytPlaying,
-};
-
-// label stripes: 2-3 random picks from the thumbnail's main colours (no video -> the stock orange/mustard)
-function palette(img) {   // the most common, clearly different colours, most common first
-  const c = document.createElement('canvas'), g = c.getContext('2d'), W = c.width = 40, H = c.height = 23;
-  g.drawImage(img, 0, 0, W, H);
-  const d = g.getImageData(0, 0, W, H).data, bins = new Map();   // throws if the image has no CORS headers
-  for (let i = 0; i < d.length; i += 4) {   // bucket pixels into 8 levels per channel, average each bucket
-    const k = d[i] >> 5 << 6 | d[i+1] >> 5 << 3 | d[i+2] >> 5, b = bins.get(k) || bins.set(k, [0, 0, 0, 0]).get(k);
-    b[0] += d[i]; b[1] += d[i+1]; b[2] += d[i+2]; b[3]++;
-  }
-  const out = [];
-  for (const [r, g, b, n] of [...bins.values()].sort((a, b) => b[3] - a[3]))
-    if (out.length < 6 && out.every(o => Math.hypot(o[0] - r/n, o[1] - g/n, o[2] - b/n) > 60)) out.push([r/n, g/n, b/n]);
-  return out.map(([r, g, b]) => `rgb(${r|0},${g|0},${b|0})`);
-}
-function tint(id) {
-  const lab = document.querySelector('.label').style, vars = ['--s1', '--s2', '--s3', '--ink'];
-  tint.id = id;
-  if (!id) return vars.forEach(v => lab.removeProperty(v));
-  const img = new Image(); img.crossOrigin = 'anonymous';
-  img.onload = () => {
-    if (tint.id !== id) return;   // a newer tape went in meanwhile
-    try {
-      const cs = palette(img).sort(() => Math.random() - 0.5).slice(0, 2 + (Math.random() < 0.5));
-      if (cs.length < 2) return;
-      vars.slice(0, 3).forEach((v, i) => lab.setProperty(v, cs[Math.min(i, cs.length - 1)]));   // 2 colours: last stripe repeats
-      const [r, g, b] = cs[0].match(/\d+/g);   // side letter sits on the top stripe: keep it readable
-      lab.setProperty('--ink', .299*r + .587*g + .114*b > 150 ? '#3a2a1c' : '#fff');
-    } catch { tint(); }   // canvas blocked: keep the stock stripes
-  };
-  img.src = `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
-}
-
-function setTitle(t) {
-  const el = $('title'); el.textContent = t || '...';
-  el.getAnimations().forEach(a => a.cancel());
-  const over = el.scrollWidth - el.parentElement.clientWidth;
-  if (over > 0) el.animate([{transform:'translateX(0)'},{transform:`translateX(${-over}px)`}],
-                           {duration: over*40+2000, iterations:Infinity, direction:'alternate', easing:'ease-in-out'});
-}
-
-// ---- sound (Web Audio, layered on top — YouTube audio itself can't be processed) ----
-let ctx, hiss, whir;   // hiss: gain of the looping tape-noise bed
-const rnd = () => Math.random() * 2 - 1;
-function initAudio() {
-  if (ctx) return ctx.resume();
-  ctx = new AudioContext();
-  const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate), d = buf.getChannelData(0);
-  let b = 0;
-  for (let i = 0; i < d.length; i++) { b = 0.97*b + 0.03*rnd(); d[i] = b*4 + rnd()*0.15; }
-  const n = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
-  n.buffer = buf; n.loop = true; f.type = 'bandpass'; f.frequency.value = 3500; f.Q.value = 0.4; g.gain.value = 0;
-  n.connect(f).connect(g).connect(ctx.destination); n.start(); hiss = g.gain;
-}
-const bypass = () => $('ab').getAttribute('aria-pressed') === 'true';   // A/B: hear the untouched file
-const hissLevel = () => bypass() ? 0 : ($('hiss').value / 100) * 0.12;
-function hissOn()  { if (hiss) hiss.setTargetAtTime(hissLevel(), ctx.currentTime, 0.3); }
-function hissOff() { if (hiss) hiss.setTargetAtTime(0, ctx.currentTime, 0.1); }
-function snapSound(at) {   // a sharp pop, then the loose end thwapping the spinning reel, slowing down
-  initAudio(); at += ctx.currentTime;
-  const len = ctx.sampleRate * 0.04, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
-  for (let i = 0; i < len; i++) d[i] = rnd() * (1 - i / len) ** 3;
-  for (let k = 0; k < 16; k++, at += k === 1 ? 0.15 : 0.03 + k * 0.012) {
-    const n = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
-    n.buffer = buf; f.type = k ? 'lowpass' : 'highpass'; f.frequency.value = k ? 1400 : 2000;
-    g.gain.value = k ? 0.6 * (1 - k / 16) : 1;
-    n.connect(f).connect(g).connect(ctx.destination); n.start(at);
-  }
-}
-function clunk() {  // mechanical key
-  initAudio();
-  const o = ctx.createOscillator(), g = ctx.createGain();
-  o.frequency.setValueAtTime(180, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(40, ctx.currentTime+0.08);
-  g.gain.setValueAtTime(0.3, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.1);
-  o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime+0.1);
-}
-function whirOn() {  // wind motor
-  initAudio();
-  const o = ctx.createOscillator(), f = ctx.createBiquadFilter(), g = ctx.createGain();
-  o.type = 'sawtooth'; o.frequency.setValueAtTime(90, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(260, ctx.currentTime+0.6);
-  f.type = 'lowpass'; f.frequency.value = 1200; g.gain.value = 0.04;
-  o.connect(f).connect(g).connect(ctx.destination); o.start(); whir = { o, g };
-}
-function whirOff() {
-  if (!whir) return;
-  whir.g.gain.setTargetAtTime(0, ctx.currentTime, 0.05); whir.o.stop(ctx.currentTime+0.3); whir = null;
-}
-
-// ---- uploaded file: the only source whose sound we can actually bend ----
-const audio = new Audio(); audio.preservesPitch = audio.webkitPreservesPitch = false;   // speed changes pitch, like tape
-let fx;
-function buildFx(ac, input) {   // works on a live or an offline context (fxcheck.js measures it offline)
-  const bq = (type, hz, q = 0) => { const f = ac.createBiquadFilter(); f.type = type; f.frequency.value = hz; f.Q.value = q; return f; };
-  const gain = v => { const g = ac.createGain(); g.gain.value = v; return g; };
-  const lfo = (hz, to) => { const o = ac.createOscillator(), g = gain(0); o.frequency.value = hz; o.connect(g).connect(to); o.start(); return { depth: g.gain, hz: o.frequency }; };
-  const mod = (secs, fill, to) => {   // a slow looping control signal into an AudioParam; returns its depth
-    const buf = ac.createBuffer(1, 8000 * secs, 8000), d = buf.getChannelData(0); fill(d, i => i / 8000);
-    const n = ac.createBufferSource(), g = gain(0); n.buffer = buf; n.loop = true; n.connect(g).connect(to); n.start(); return g.gain;
-  };
-  // pitch: a short delay line whose length wobbles = the pitch wobbles
-  const delay = ac.createDelay(0.1); delay.delayTime.value = 0.02;
-  const sat = ac.createWaveShaper(); sat.oversample = '4x';   // tape saturation, slightly lopsided for even harmonics
-  sat.curve = Float32Array.from({ length: 2048 }, (_, i) => Math.tanh(4 * (i / 1023.5 - 1) + 0.15) - Math.tanh(0.15));
-  const n = {
-    wow: lfo(0.6, delay.delayTime), flutter: lfo(7.3, delay.delayTime),
-    drift: mod(19, (d, t) => {   // irregular wander: five slow sines that all fit the loop exactly, so it never clicks
-      for (let i = 0; i < d.length; i++) d[i] = [3, 7, 11, 17, 23].reduce((a, k, j) => a + Math.sin(2 * Math.PI * k * t(i) / 19 + j * 1.7), 0) / 5;
-    }, delay.delayTime),
-    bump: bq('peaking', 90, 0.9), drive: gain(0.25), dc: bq('highpass', 35),
-    lp1: bq('lowpass', 9000, -5.3), lp2: bq('lowpass', 9000, 2.3),   // Q is in dB here; together a flat 24 dB/octave roll-off
-    fade: gain(1), wet: gain(1), dry: gain(0), out: gain(1),
-  };
-  n.drop = mod(23, (d, t) => {   // dropouts: ten brief dips scattered through the loop
-    for (let k = 0; k < 10; k++) {
-      const at = 1 + Math.random() * 21, w = 0.04 + Math.random() * 0.12, deep = 0.4 + Math.random() * 0.6;
-      for (let i = Math.floor(at * 8000); t(i) < at + w; i++) d[i] = -deep * 0.5 * (1 - Math.cos(2 * Math.PI * (t(i) - at) / w));
-    }
-  }, n.fade.gain);
-  input.connect(delay).connect(n.bump).connect(n.drive).connect(sat).connect(n.dc).connect(n.lp1).connect(n.lp2).connect(n.fade).connect(n.wet).connect(n.out);
-  input.connect(n.dry).connect(n.out);
-  return n;
-}
-// wow, age: 0..1 from the sliders
-function setFx(n, { wow, age, bypass }) {
-  n.wow.depth.value = 0.003 * wow; n.drift.value = 0.004 * wow; n.flutter.depth.value = 0.00015 * wow;
-  n.lp1.frequency.value = n.lp2.frequency.value = 14000 * 0.3 ** age;   // 14 kHz fresh -> 4.2 kHz worn out
-  n.bump.gain.value = 1 + 3 * age;                      // tape heads lift the low end a little
-  const drive = 1 + 2 * age;
-  n.drive.gain.value = drive / 4;                       // the curve is tanh(4x), so this is unity gain for quiet signals at drive 1
-  n.drop.value = 0.7 * age;
-  n.wet.gain.value = bypass ? 0 : 1.13 * drive ** -MAKEUP; n.dry.gain.value = bypass ? 1 : 0;   // level-matched, so A/B compares tone, not loudness
-}
-const MAKEUP = 0.85;   // found by measuring: keeps pink noise within about 1 dB of the dry level at any setting
-function initFx() {
-  initAudio(); if (fx) return;
-  fx = buildFx(ctx, ctx.createMediaElementSource(audio)); fx.out.connect(ctx.destination); tune();
-}
-const tune = () => fx && setFx(fx, { wow: $('wow').value / 100, age: $('age').value / 100, bypass: bypass() });   // sliders -> chain
-const motorRate = sp => sp > 0.98 ? 1 : Math.max(0.1, sp);
-const file = {
-  preroll: 0, v: 1, stopping: false,   // no pre-roll: the music itself winds up to speed with the motor
-  play() { this.stopping = false; fx.out.gain.value = this.v; audio.playbackRate = motorRate(speed); audio.play(); },
-  pause() { this.stopping = true; },   // keep playing while the motor coasts down; motor() does the real pause
-  motor(sp) {
-    if (wind || audio.paused) return;
-    if (this.stopping && sp < 0.15) { this.stopping = false; return audio.pause(); }
-    const r = motorRate(sp);
-    if (r !== audio.playbackRate && (r === 1 || Math.abs(r - audio.playbackRate) > 0.01)) audio.playbackRate = r;
-  },
-  // ponytail: only fast-forward is audible (browsers can't play media backwards) and it tops out at 16x,
-  // so on tapes > 10 min the squeal lags the reels. Decode to an AudioBuffer + reversed copy if that matters.
-  wind(dir, rate) {
-    this.stopping = false;
-    if (dir < 0) return audio.pause();
-    fx.out.gain.value = this.v * 0.35; audio.playbackRate = Math.min(16, rate); audio.play();
-  },
-  seek(t, go) { audio.currentTime = t; go ? this.play() : audio.pause(); },
-  eject() { audio.pause(); URL.revokeObjectURL(audio.src); audio.removeAttribute('src'); },
-  vol(v) { this.v = v / 100; if (fx) fx.out.gain.value = this.v; },
-  next() {}, first() {}, time: () => audio.currentTime, dur: () => audio.duration || 0, playing: () => false,
-};
-audio.onended = () => { if (!wind && loaded) ended(); };
-audio.onerror = () => { if (loaded && src === file) { show('stop'); msg('เปิดไฟล์นี้ไม่ได้ ลองไฟล์เสียงอื่นนะ'); } };
-
-// ---- remembered settings (localStorage can be blocked: then we just don't remember) ----
-const save = (k, v) => { try { localStorage['boom80.' + k] = v; } catch {} };
-const saved = k => { try { return localStorage['boom80.' + k]; } catch {} };
-for (const id of ['hiss', 'wow', 'age', 'vol']) {
-  const el = $(id); if (saved(id) != null) el.value = saved(id);
-  el.addEventListener('change', () => save(id, el.value));
-}
-
-// ---- transport ----
-function show(s) {   // latch the keys to match the deck state
-  state = s;
-  $('play').classList.toggle('down', s !== 'stop');
-  $('pause').classList.toggle('down', s === 'pause');
-  $('deck').classList.toggle('on', s === 'play');
-  s === 'play' ? hissOn() : hissOff();
-}
-const loopOn = () => $('loop').getAttribute('aria-pressed') === 'true';
-function ended() {   // end of tape: auto-stop — and with LOOP on, rewind by itself and play again
-  show('stop'); clunk();
-  if (loopOn()) setTimeout(() => {
-    if (state !== 'stop' || !loaded || wind || !loopOn()) return;
-    autoRew = true; windStart(-1); msg('↻ กรอกลับไปเล่นใหม่...');
-    if ($('skip').checked) skipRew();
-  }, 600);
-}
-const noTape = () => msg('ยังไม่ได้ใส่เทป');
-function snap() {   // the tape stretches (pitch sags), snaps, goes silent, then the music fades back in where it is
-  if (!loaded || snapAt || wind || state !== 'play') return;
-  speed *= 0.5;                                    // drag: reels slow and file audio sags in pitch
-  snapAt = performance.now() + CUT; snapSound(CUT / 1000);
-  setTimeout(() => { hissOff(); loose = 8; $('cassette').classList.add('broken'); msg('✂ เทปขาด! ต่อเทปแป๊บนึงนะ...'); }, CUT);
-}
-function play() {
-  if (!loaded) return noTape();
-  if (wind) windEnd();   // PLAY during the LOOP rewind: play from here
-  if (state === 'play') return;
-  const d = src.dur();
-  if (d && pos >= d - 1) return msg('สุดม้วนแล้ว กรอกลับก่อนนะ');
-  msg('');
-  const wait = Math.min(src.preroll, state === 'pause' ? 80 : PREROLL);   // reels and hiss start first, music follows
-  show('play'); clearTimeout(preroll); preroll = setTimeout(() => src.play(), wait);
-}
-function pause() {
-  if (state === 'stop') return;
-  if (state === 'pause') return play();
-  clearTimeout(preroll); src.pause(); show('pause');
-}
-function stop() {   // STOP/EJECT is one key, like a real deck
-  clearTimeout(preroll);
-  if (wind) return windEnd();   // STOP during the LOOP rewind cancels it (doesn't eject mid-wind)
-  if (state !== 'stop') { src.pause(); return show('stop'); }
-  if (!loaded) return;
-  loaded = false; src.eject(); $('well').classList.add('out'); msg('');
-}
-let swapT = 0, swapping = false;
-function swapTape(title, id) {   // playlist's next track: the old tape slides out, the new one goes in, then play on
-  const resume = state === 'play';
-  clearTimeout(swapT); clearTimeout(preroll);
-  swapping = true; settle = performance.now() + 1500; player.pauseVideo(); show('stop'); clunk();
-  $('well').classList.add('out');
-  swapT = setTimeout(() => {
-    if (!loaded) return swapping = false;   // ejected mid-swap
-    setTitle(title); tint(id); snapAt = 0; $('cassette').classList.remove('broken'); pos = zero = 0;
-    $('well').classList.remove('out');
-    swapT = setTimeout(() => { swapping = false; clunk(); if (resume && loaded) play(); }, 400);
-  }, 450);
-}
-function insert(next, cue) {   // cue only: a tape doesn't play until you press PLAY
-  msg(''); clearTimeout(preroll); clearTimeout(swapT); swapping = false; show('stop');
-  if (loaded) src.eject();
-  loaded = false;
-  const c = $('well'), swap = c.classList.contains('out') ? 0 : 450;   // old tape slides out first
-  c.classList.add('out');
-  setTimeout(() => {
-    src = next; setTitle(curTitle = ''); tint(); $('ab').setAttribute('aria-pressed', false); cue(); src.vol($('vol').value);
-    $('monitor').hidden = src === file;                                  // monitor is YouTube-only,
-    for (const id of ['wow', 'age', 'ab']) $(id).disabled = src !== file;   // sound-bending controls are file-only
-    snapAt = 0; $('cassette').classList.remove('broken');   // a fresh tape (the snapped one leaves with its strand showing)
-    pos = zero = 0; loaded = true; c.classList.remove('out'); setTimeout(clunk, 400);
-  }, swap);
-}
-function load() {
-  const { vid, list } = parse($('url').value.trim());
-  if (!list && !vid) return msg('ลิงก์นี้ไม่ใช่ลิงก์ YouTube นะ');
-  if (!ready) return msg('รอเครื่องโหลดแป๊บนึง...');
-  insert(yt, () => { want = list && vid ? { list, vid } : null; list ? player.cuePlaylist({ list }) : player.cueVideoById(vid); });
-}
-function loadFile(f) {   // stays in the browser: an object URL, nothing is uploaded anywhere
-  if (!f) return;
-  insert(file, () => { initFx(); audio.src = URL.createObjectURL(f); setTitle(curTitle = f.name.replace(/\.[^.]+$/, '')); });
-}
-function windStart(dir) {
-  if (!loaded) return noTape();
-  if (wind) return;
-  clearTimeout(preroll); msg('');
-  wasPlaying = state === 'play'; wind = dir;
-  src.wind(dir, windRate()); hissOff(); whirOn();
-  $(dir < 0 ? 'rew' : 'ff').classList.add('down'); $('cassette').classList.add('winding');
-  $('deck').classList.toggle('looping', autoRew);
-}
-function windEnd(hitEnd) {
-  if (!wind) return;
-  const again = autoRew && hitEnd; autoRew = false;
-  wind = 0; whirOff();
-  $('rew').classList.remove('down'); $('ff').classList.remove('down'); $('cassette').classList.remove('winding');
-  $('deck').classList.remove('looping');
-  settle = performance.now() + 1500;
-  const d = src.dur(), go = wasPlaying && !hitEnd;
-  src.seek(d ? Math.min(pos, d - 0.5) : pos, go);
-  if (hitEnd) { show('stop'); clunk(); } else if (go) hissOn();
-  if (again) setTimeout(() => { if (state === 'stop' && loaded && loopOn()) { src.first(); play(); } }, 500);
-}
-
-const key = fn => () => { clunk(); fn(); };
-$('load').onclick  = key(load);
-$('url').onkeydown = e => e.key === 'Enter' && $('load').click();
-$('play').onclick  = key(play);
-$('pause').onclick = key(pause);
-$('stop').onclick  = key(stop);
-$('next').onclick  = key(() => loaded ? src.next() : noTape());
-$('snap').onchange = () => save('snap', $('snap').checked);
-if (saved('snap') != null) $('snap').checked = saved('snap') === 'true';
-$('pick').onclick  = () => $('file').click();
-$('file').onchange = e => { clunk(); loadFile(e.target.files[0]); e.target.value = ''; };
-const deck = $('deck');   // drag a file onto the deck
-deck.ondragover = e => { e.preventDefault(); deck.classList.add('drop'); };
-deck.ondragleave = () => deck.classList.remove('drop');
-deck.ondrop = e => { e.preventDefault(); deck.classList.remove('drop'); clunk(); loadFile(e.dataTransfer.files[0]); };
-const setLoop = on => { $('loop').setAttribute('aria-pressed', on); $('skip').disabled = !on; };   // skip only means something with LOOP on
-$('loop').onclick  = key(() => { setLoop(!loopOn()); save('loop', loopOn()); });
-setLoop(saved('loop') === 'true');
-const skipRew = () => { if (autoRew) { pos = 0; windEnd(true); } };   // jump to the start, replay as usual
-$('skip').onchange = () => { save('skip', $('skip').checked); if ($('skip').checked) skipRew(); };   // ticking it mid-rewind skips now
-$('skip').checked = saved('skip') === 'true';
-$('zero').onclick  = () => { clunk(); zero = pos; };
-for (const [id, dir] of [['rew', -1], ['ff', 1]]) {   // hold to wind
-  const b = $(id), down = key(() => windStart(dir)), up = () => windEnd();
-  b.onpointerdown = e => { b.setPointerCapture(e.pointerId); down(); };
-  b.onkeydown = e => (e.key === ' ' || e.key === 'Enter') && !e.repeat && down();
-  b.onpointerup = b.onpointercancel = b.onkeyup = b.onblur = up;
-}
-$('vol').oninput  = () => loaded && src.vol($('vol').value);
-$('wow').oninput  = $('age').oninput = tune;
-$('ab').onclick   = key(() => { $('ab').setAttribute('aria-pressed', !bypass()); tune(); if (state === 'play') hissOn(); });
-$('hiss').oninput = () => state === 'play' && hissOn();
-
-// ---- reels + counter, every frame ----
-$('counter').innerHTML = '<i><b>0<br>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>0</b></i>'.repeat(3);
-const wheels = [...document.querySelectorAll('.counter b')].reverse();   // [units, tens, hundreds]
-const hubs = [...document.querySelectorAll('.hub')], tapes = [...document.querySelectorAll('.tape')];
-const packR = f => Math.sqrt(1.21 + 5.04 * f);   // pack radius in cm: bare hub 1.1 -> full 2.5 (area is linear in tape length)
-const ang = [0, 0];
-let speed = 0, last = performance.now();
-function frame(now) {
-  const dt = Math.min(0.1, (now - last) / 1000); last = now;
-  const on = loaded, dur = on ? src.dur() : 0;
-
-  if (wind) {
-    pos = Math.max(0, Math.min(dur, pos + wind * windRate() * dt));
-    if (wind < 0 ? pos <= 0 : dur && pos >= dur) windEnd(true);          // hit the end of the tape
-  } else if (on) {
-    const t = src.time();
-    if (now > settle || Math.abs(t - pos) < 1)                            // after a wind, wait for the seek to land
-      pos = src.playing() && Math.abs(t - pos) < 0.5 ? pos + dt : t;      // glide between YouTube's coarse updates
-  }
-
-  // both reels move the same length of tape, so the smaller pack turns faster
-  const p = dur ? pos / dur : 0, r = [packR(1 - p), packR(p)];
-  const target = !on ? 0 : wind ? wind * 5 : state === 'play' ? 1 : 0;
-  speed += (target - speed) * Math.min(1, dt * 8);                        // motor inertia
-  if (on && src.motor) src.motor(speed);                                  // file audio follows the motor up and down
-  loose *= Math.exp(-dt * 1.6);                                           // loose take-up reel spins down
-  r.forEach((cm, i) => {
-    ang[i] -= (speed + (i ? loose : 0)) * dt * 273 / cm;                                      // 4.76 cm/s tape speed -> deg/s
-    hubs[i].style.transform = `rotate(${ang[i]}deg)`;
-    tapes[i].style.width = tapes[i].style.height = cm * 78 + '%';
-  });
-
-  // mechanical counter: each wheel only turns while the one below it rolls 9 -> 0
-  const v = (((pos - zero) % 1000) + 1000) % 1000, d = [v % 10];
-  d[1] = Math.floor(v / 10) % 10 + Math.max(0, d[0] - 9);
-  d[2] = Math.floor(v / 100) % 10 + Math.max(0, d[1] - 9);
-  wheels.forEach((w, i) => w.style.transform = `translateY(${-d[i] / 11 * 100}%)`);
-
-  requestAnimationFrame(frame);
-}
-requestAnimationFrame(frame);
-
-// random snaps + the fade back run on a timer, not in frame(): a background tab gets no animation frames,
-// and music is usually left playing in one
-let lastTick = performance.now();
-setInterval(() => {
-  const now = performance.now(), dt = (now - lastTick) / 1000; lastTick = now;
-  if ($('snap').checked && Math.random() < dt / SNAP_EVERY) snap();      // random snaps while playing
-  if (snapAt && loaded) {                                                 // snapped: silent for GAP, then fade back in
-    const e = now - snapAt, duck = e < 0 ? 1 : e < GAP ? 0 : Math.min(1, (e - GAP) / FADE);
-    src.vol($('vol').value * duck * duck);
-    if (e > 0 && duck === 1) { snapAt = 0; $('cassette').classList.remove('broken'); msg(''); if (state === 'play') hissOn(); }
-  }
-}, 50);
-
-// self-check: link parsing
-for (const [url, vid, list] of [
-  ['https://youtu.be/jNQXAC9IVRw', 'jNQXAC9IVRw', null],
-  ['https://www.youtube.com/watch?v=jNQXAC9IVRw&list=PL_abc-123&index=3', 'jNQXAC9IVRw', 'PL_abc-123'],
-  ['https://www.youtube.com/playlist?list=PL_abc-123', null, 'PL_abc-123'],
-  ['https://www.youtube.com/shorts/jNQXAC9IVRw', 'jNQXAC9IVRw', null],
-  ['hello', null, null],
-]) { const r = parse(url); console.assert(r.vid === vid && r.list === list, 'parse', url, r); }
-</script>
+<!-- engine: sound, music sources and the deck mechanism (never touches the page) -->
+<script src="js/engine/sound.js"></script>
+<script src="js/engine/sources.js"></script>
+<script src="js/engine/deck.js"></script>
+<!-- ui: how the deck looks, and how clicks/sliders reach the engine -->
+<script src="js/ui/i18n.js"></script>
+<script src="js/ui/view.js"></script>
+<script src="js/ui/controls.js"></script>
 </body>
 </html>

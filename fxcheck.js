@@ -49,7 +49,7 @@ export async function measure(build, still = build) {
   return out;
 }
 
-// the chain in index.html
+// the chain in js/engine/sound.js
 export const chain = opts => (ac, input) => { const n = window.buildFx(ac, input); window.setFx(n, opts); return n.out; };
 
 // the first version of the chain (before the redesign), kept so "before" numbers can be reproduced
