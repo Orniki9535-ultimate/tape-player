@@ -1,6 +1,6 @@
 :root { --wood:#5a3a22; --body:#2b2622; --cream:#efe4cc; --orange:#e0782f; --mustard:#d9a93a; }
 * { box-sizing:border-box; }
-body { margin:0; min-height:100vh; display:grid; place-items:center; align-content:center; padding:24px;
+body { margin:0; min-height:100vh; display:grid; grid-template-columns:minmax(0,1fr); place-items:center; align-content:center; padding:24px;
        background:radial-gradient(circle at 30% 20%, #3b2f27, #16120f); font-family:'Mali',sans-serif; color:var(--cream); }
 .deck { width:min(1000px,100%); display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:0 26px; align-items:start; background:linear-gradient(#3a332d,var(--body)); border-radius:18px; padding:22px;
         box-shadow:0 0 0 6px var(--wood), 0 20px 50px #000a, inset 0 1px 0 #fff2; }
@@ -76,9 +76,10 @@ label:has(:disabled) :is(input, [data-t]:not(.tip-text)) { opacity:.35; }   /* d
 .counter b { display:block; }
 button.zero { width:18px; height:18px; padding:0; border-radius:3px; background:#222; box-shadow:0 3px 0 #000; }
 input[type=range] { accent-color:var(--orange); width:100%; margin:0; }
-/* YouTube's terms: the player must stay visible, unobscured and at least 200x200 — so it's a small "monitor" */
-.monitor { border-radius:8px; overflow:hidden; width:200px; height:200px; box-shadow:0 0 0 3px #111, 0 0 0 9px #1b1714, 0 8px 20px #0009; }
-.tv { display:flex; flex-direction:column; align-items:center; gap:14px; margin-top:28px; }
+/* YouTube's terms: the player must stay visible, unobscured and at least 200x200.
+   16:9 so the video fills it and the ad/skip buttons are big enough to tap; min-height keeps tiny phones at 200 */
+.monitor { border-radius:8px; overflow:hidden; width:min(480px, calc(100% - 18px)); aspect-ratio:16/9; min-height:200px; box-shadow:0 0 0 3px #111, 0 0 0 9px #1b1714, 0 8px 20px #0009; }
+.tv { width:100%; display:flex; flex-direction:column; align-items:center; gap:14px; margin-top:28px; }
 .tv small { font:700 10px 'Courier Prime'; letter-spacing:2px; color:#8f846f; text-transform:uppercase; }
 /* no YouTube tape: fold the TV away. Not display:none, so the player still starts up in every browser */
 .tv.off { height:0; margin:0; overflow:hidden; visibility:hidden; }
