@@ -45,7 +45,8 @@
   button.mini[aria-pressed=true] { transform:translateY(2px); box-shadow:0 1px 0 #555; background:linear-gradient(var(--mustard),#b4851f); }
 
   /* controls */
-  .row { display:flex; gap:10px; margin-top:16px; }
+  .row { display:flex; flex-wrap:wrap; gap:10px; }
+  .row #url { flex:10 1 200px; } .btns { flex:1 0 auto; display:flex; gap:10px; } .btns .load { flex:1; }   /* both buttons drop under the link together on narrow screens */
   input[type=text] { flex:1; min-width:0; padding:10px 12px; border-radius:8px; border:0; background:#1b1714; color:var(--cream);
                      font-family:'Courier Prime'; box-shadow:inset 0 2px 6px #000; }
   .keys { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-top:16px; }
@@ -79,22 +80,35 @@
                background:linear-gradient(#000,#333 45%,#333 55%,#000); }
   .counter b { display:block; }
   button.zero { width:18px; height:18px; padding:0; border-radius:3px; background:#222; box-shadow:0 3px 0 #000; }
-  .meta label { flex:1; min-width:70px; display:flex; flex-direction:column; gap:2px; }
   input[type=range] { accent-color:var(--orange); width:100%; margin:0; }
   /* YouTube's terms: the player must stay visible, unobscured and at least 200x200 — so it's a small "monitor" */
-  .monitor { margin-top:16px; border-radius:8px; overflow:hidden; width:200px; height:200px; box-shadow:0 0 0 3px #111; }
+  .monitor { border-radius:8px; overflow:hidden; width:200px; height:200px; box-shadow:0 0 0 3px #111; }
   .monitor iframe, #yt { width:100%; height:100%; display:block; }
-  .msgrow { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; min-height:26px; margin-top:4px; }
-  .msg { font-size:12px; color:#c88; }
-  .msgrow label { display:flex; align-items:center; gap:4px; font-size:12px; color:#b9ab90; white-space:nowrap; cursor:pointer; }
-  #skip { accent-color:var(--orange); margin:0; }
-  .settings { border-left:1px solid #fff1; padding-left:26px; }
-  .settings > :first-child { margin-top:0; }
+  .msg { font-size:12px; color:#e9a08a; margin-top:8px; } .msg:empty { display:none; }
+  .count small { font:700 10px 'Courier Prime'; letter-spacing:2px; color:#8f846f; }
+  /* settings: one inset panel per topic */
+  .settings { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; }
+  .group { background:#0003; border:1px solid #fff1; border-radius:12px; padding:12px 14px 14px; box-shadow:inset 0 1px 0 #fff1; }
+  .group h2 { display:flex; align-items:center; gap:8px; margin:0 0 10px; font:700 12px 'Mali'; letter-spacing:.5px; color:#d6c9ac; }
+  .group h2 .mini { margin-left:auto; }
+  .tag { font-size:10px; font-weight:500; color:#8f846f; border:1px solid #fff2; border-radius:20px; padding:1px 8px; }
+  .sliders { display:grid; grid-template-columns:1fr 1fr; gap:10px 18px; }
+  .sliders label { display:flex; flex-direction:column; gap:6px; font-size:13px; color:#b9ab90; }
+  .switch { display:flex; align-items:center; gap:10px; font-size:13px; color:#b9ab90; cursor:pointer; padding:4px 0; }
+  .switch input { appearance:none; flex:none; position:relative; width:36px; height:20px; margin:0; border-radius:10px; cursor:inherit;
+                  background:#1b1714; box-shadow:inset 0 2px 5px #000; transition:background .2s; }
+  .switch input::before { content:""; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%;
+                          background:linear-gradient(#eee,#aaa); box-shadow:0 1px 3px #000a; transition:transform .2s; }
+  .switch input:checked { background:var(--orange); }
+  .switch input:checked::before { transform:translateX(16px); }
+  .screen:has(#monitor[hidden]) { display:none; }   /* monitor is YouTube-only */
+  .screen .monitor { margin-inline:auto; }
+  button:hover:not(:disabled) { filter:brightness(1.08); }
+  :focus-visible { outline:2px solid var(--mustard); outline-offset:2px; }
   @media (max-width:760px) {
     body { padding:12px; place-items:start center; }
     .deck { grid-template-columns:minmax(0,1fr); padding:16px; }
-    .settings { border-left:0; padding-left:0; border-top:1px solid #fff1; margin-top:18px; padding-top:18px; }
-    .monitor { margin-inline:auto; }
+    .settings { margin-top:18px; }
   }
 </style>
 </head>
@@ -130,31 +144,49 @@
   </div>
 
   <div class="meta">
-    <span class="count"><span class="counter" id="counter" aria-hidden="true"></span>
+    <span class="count"><small>COUNTER</small><span class="counter" id="counter" aria-hidden="true"></span>
       <button class="zero" id="zero" aria-label="รีเซ็ตตัวนับ" title="รีเซ็ตตัวนับ"></button></span>
   </div>
   </section>
 
   <section class="settings" aria-label="การตั้งค่า">
-  <div class="row">
-    <input type="text" id="url" aria-label="ลิงก์ YouTube" placeholder="ลิงก์ YouTube — หรือลากไฟล์เสียงมาวาง">
-    <button class="load" id="load">ใส่เทป</button>
-    <button class="load" id="pick" title="เลือกไฟล์เสียงจากเครื่อง (ได้เสียงเทปยานของจริง)">ไฟล์</button>
-    <input type="file" id="file" accept="audio/*" hidden>
-  </div>
-  <div class="msgrow"><div class="msg" id="msg" role="status"></div>
-    <span class="count"><label title="ระหว่างเล่น เทปอาจขาดได้ทุกเมื่อ — เพลงจะเงียบไปพักนึงแล้วค่อยๆ ดังกลับมาเอง"><input type="checkbox" id="snap" checked> ✂ เทปขาดแบบสุ่ม</label>
-    <label title="ตอนวนซ้ำ ไม่ต้องรอกรอกลับ — กลับไปต้นม้วนแล้วเล่นเลย"><input type="checkbox" id="skip" disabled> ข้ามการกรอกลับ</label></span></div>
-
-  <div class="meta">
-    <label>เสียงซ่า <input type="range" id="hiss" min="0" max="100" value="35"></label>
-    <label title="เสียงแกว่งแบบเทปยาน — ใช้ได้กับไฟล์เสียงเท่านั้น">เทปยาน <input type="range" id="wow" min="0" max="100" value="50" disabled></label>
-    <label title="เสียงทึบ อิ่มตัว และวูบหายแบบเทปเก่า — ใช้ได้กับไฟล์เสียงเท่านั้น">ความเก่า <input type="range" id="age" min="0" max="100" value="60" disabled></label>
-    <label>เสียงเพลง <input type="range" id="vol" min="0" max="100" value="80"></label>
-    <button class="mini" id="ab" aria-pressed="false" disabled title="กดสลับฟังเสียงต้นฉบับ (ไม่ผ่านเอฟเฟกต์ ไม่มีเสียงซ่า) เทียบกับเสียงผ่านเครื่อง — ใช้ได้กับไฟล์เสียงเท่านั้น">ต้นฉบับ</button>
+  <div class="group">
+    <h2>ใส่เทป</h2>
+    <div class="row">
+      <input type="text" id="url" aria-label="ลิงก์ YouTube" placeholder="วางลิงก์ YouTube หรือลากไฟล์เสียงมาวาง">
+      <span class="btns"><button class="load" id="load">ใส่เทป</button>
+      <button class="load" id="pick" title="เลือกไฟล์เสียงจากเครื่อง (ได้เสียงเทปยานของจริง)">ไฟล์</button></span>
+      <input type="file" id="file" accept="audio/*" hidden>
+    </div>
+    <div class="msg" id="msg" role="status"></div>
   </div>
 
-  <div class="monitor" id="monitor"><div id="yt"></div></div>
+  <div class="group">
+    <h2>เสียง</h2>
+    <div class="sliders">
+      <label>เสียงเพลง <input type="range" id="vol" min="0" max="100" value="80"></label>
+      <label>เสียงซ่า <input type="range" id="hiss" min="0" max="100" value="35"></label>
+    </div>
+  </div>
+
+  <div class="group">
+    <h2>เสียงเทปเก่า <span class="tag">ไฟล์เสียงเท่านั้น</span> <button class="mini" id="ab" aria-pressed="false" disabled title="กดสลับฟังเสียงต้นฉบับ (ไม่ผ่านเอฟเฟกต์ ไม่มีเสียงซ่า) เทียบกับเสียงผ่านเครื่อง — ใช้ได้กับไฟล์เสียงเท่านั้น">ต้นฉบับ</button></h2>
+    <div class="sliders">
+      <label title="เสียงแกว่งแบบเทปยาน — ใช้ได้กับไฟล์เสียงเท่านั้น">เทปยาน <input type="range" id="wow" min="0" max="100" value="50" disabled></label>
+      <label title="เสียงทึบ อิ่มตัว และวูบหายแบบเทปเก่า — ใช้ได้กับไฟล์เสียงเท่านั้น">ความเก่า <input type="range" id="age" min="0" max="100" value="60" disabled></label>
+    </div>
+  </div>
+
+  <div class="group switches">
+    <h2>ตัวเลือก</h2>
+    <label class="switch" title="ระหว่างเล่น เทปอาจขาดได้ทุกเมื่อ — เพลงจะเงียบไปพักนึงแล้วค่อยๆ ดังกลับมาเอง"><input type="checkbox" id="snap" checked> ✂ เทปขาดแบบสุ่ม</label>
+    <label class="switch" title="ตอนวนซ้ำ ไม่ต้องรอกรอกลับ — กลับไปต้นม้วนแล้วเล่นเลย"><input type="checkbox" id="skip" disabled> ข้ามการกรอกลับ</label>
+  </div>
+
+  <div class="group screen">
+    <h2>จอ YouTube</h2>
+    <div class="monitor" id="monitor"><div id="yt"></div></div>
+  </div>
   </section>
 </div>
 
