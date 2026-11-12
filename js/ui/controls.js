@@ -33,7 +33,7 @@ document.addEventListener('click', e => {
 // ---- keys ----
 const key = fn => () => { clunk(); fn(); };
 $('load').onclick  = key(() => load($('url').value.trim()));
-$('url').onkeydown = e => e.key === 'Enter' && $('load').click();
+$('url').onkeydown = e => { if (e.key === 'Enter') $('load').click(); };   // braces: returning false from on* handlers cancels the key
 $('play').onclick  = key(play);
 $('pause').onclick = key(pause);
 $('stop').onclick  = key(stop);
@@ -44,7 +44,7 @@ $('ab').onclick    = key(() => { setOpt('bypass', !opts.bypass); $('ab').setAttr
 for (const [id, dir] of [['rew', -1], ['ff', 1]]) {   // hold to wind
   const b = $(id), down = key(() => windStart(dir)), up = () => windEnd();
   b.onpointerdown = e => { b.setPointerCapture(e.pointerId); down(); };
-  b.onkeydown = e => (e.key === ' ' || e.key === 'Enter') && !e.repeat && down();
+  b.onkeydown = e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) down(); };
   b.onpointerup = b.onpointercancel = b.onkeyup = b.onblur = up;
 }
 
