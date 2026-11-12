@@ -45,13 +45,13 @@ input[type=text] { flex:1; min-width:0; padding:10px 12px; border-radius:8px; bo
 .keys { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-top:16px; }
 button { font:inherit; cursor:pointer; border:0; border-radius:6px; padding:12px 0; color:#222; font-weight:700; touch-action:none;
          background:linear-gradient(#ddd,#a9a9a9); box-shadow:0 5px 0 #555, 0 6px 8px #0008; transition:transform .05s, box-shadow .05s; }
-button:active, button.down { transform:translateY(4px); box-shadow:0 1px 0 #555; }
+button:active, button.down { transform:translateY(4px); box-shadow:0 1px 0 #555, inset 0 3px 6px #0007; filter:brightness(.85); }   /* latched keys sit low and in shadow */
 /* LOOP key: latches down with a green lamp; the arrow spins while the deck auto-rewinds */
 .keys .bi { font-size:20px; line-height:1; vertical-align:middle; }
 #stop .bi { font-size:17px; margin:0 1px; }   /* two icons share one key */
 #loop { position:relative; }
 #loop .lamp { position:absolute; top:4px; right:4px; width:6px; height:6px; border-radius:50%; background:#152; }
-#loop[aria-pressed=true] { transform:translateY(4px); box-shadow:0 1px 0 #555; }
+#loop[aria-pressed=true] { transform:translateY(4px); box-shadow:0 1px 0 #555, inset 0 3px 6px #0007; filter:brightness(.85); }
 #loop[aria-pressed=true] .lamp { background:#5f5; box-shadow:0 0 6px #5f5; }
 #loop b { display:inline-block; }
 .looping #loop b { animation:spin .5s linear infinite reverse; }
@@ -118,7 +118,7 @@ html[lang=en] .lang [data-l=en], html[lang=th] .lang [data-l=th] { background:li
                         background:linear-gradient(#eee,#aaa); box-shadow:0 1px 3px #000a; transition:transform .2s; }
 .switch input:checked { background:var(--orange); }
 .switch input:checked::before { transform:translateX(16px); }
-button:hover:not(:disabled) { filter:brightness(1.08); }
+@media (hover:hover) { button:hover:not(:disabled, :active, .down) { filter:brightness(1.08); } }   /* touch screens keep :hover after a tap */
 :focus-visible { outline:2px solid var(--mustard); outline-offset:2px; }
 @media (max-width:760px) {
   body { padding:12px; place-items:start center; align-content:start; }
