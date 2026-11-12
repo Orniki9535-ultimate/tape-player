@@ -98,7 +98,7 @@ function stop() {   // STOP/EJECT is one key, like a real deck
   if (wind) return windEnd();   // STOP during the LOOP rewind cancels it (doesn't eject mid-wind)
   if (state !== 'stop') { src.pause(); return show('stop'); }
   if (!loaded) return;
-  loaded = false; src.eject(); view.well(true); view.screen(false); view.msg('');
+  loaded = false; src.eject(); view.well(true); view.screen(false); view.msg(''); view.ejected();
 }
 const nextTrack = () => loaded ? src.next() : noTape();
 const resetCounter = () => zero = pos;

@@ -21,6 +21,7 @@ const view = {
   title: setTitle,
   stripes: tint,
   screen: on => $('tv').classList.toggle('off', !on),   // the YouTube TV, only while a YouTube tape is in
+  ejected: () => $('url').value = '',   // the tape is out: drop its link (the counter stays, like a real mechanical one)
   source(bends) {   // a new tape went in; bends: we can change its sound (files, or YouTube with the extension)
     view.bends(bends); $('ab').setAttribute('aria-pressed', false);
   },
