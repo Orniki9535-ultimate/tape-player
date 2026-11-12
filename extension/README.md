@@ -56,6 +56,7 @@ Chrome อาจเตือนเรื่อง developer mode ตอนเป
 แอป → extension  { tapeDeck: 'hello' }                  ตอน player พร้อม และทุกครั้งที่ใส่เทป
 extension → แอป  { tapeDeck: 'ready' }
 แอป → extension  { tapeDeck: 'fx', wow, age, bypass }   ทุกครั้งที่ปรับ (wow, age: 0..1)
+แอป → extension  { tapeDeck: 'wind', rate }             ตอนกรอไปข้างหน้า (rate สูงสุด 16) และ rate: 0 ตอนหยุดกรอ
 ```
 
 ถ้าย้ายแอปไปที่อยู่อื่น ต้องแก้รายชื่อ `APP` ใน `content.js`

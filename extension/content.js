@@ -3,6 +3,7 @@
 // hello. The app then sends the slider settings:
 //   app -> us  { tapeDeck: 'hello' }                     us -> app  { tapeDeck: 'ready' }
 //   app -> us  { tapeDeck: 'fx', wow, age, bypass }      (wow, age: 0..1; bypass: the untouched sound)
+//   app -> us  { tapeDeck: 'wind', rate }                 (fast-forward speed, up to 16; 0: back to normal)
 (() => {
   const APP = ['https://orniki9535-ultimate.github.io', 'http://localhost', 'http://127.0.0.1'];
   // who embedded us: the IFrame API puts the page's origin in the URL; the referrer is the fallback
@@ -24,6 +25,10 @@
       opts = { wow: clamp(e.data.wow), age: clamp(e.data.age), bypass: !!e.data.bypass };
       for (const n of chains) setFx(n, opts);
       log('settings', JSON.stringify(opts));
+    } else if (e.data.tapeDeck === 'wind') {   // fast-forward: play fast with the pitch rising and quieter, like the app does with files
+      const r = Math.min(16, +e.data.rate || 0), fast = r > 1;
+      for (const v of videos) { v.preservesPitch = !fast; v.playbackRate = fast ? r : 1; }
+      for (const n of chains) n.out.gain.value = fast ? 0.35 : 1;
     }
   });
 

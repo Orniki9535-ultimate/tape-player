@@ -16,7 +16,8 @@ let player, ytReady = false, ytPlaying = false;
 let ytFx = false;   // the extension answered: this player's sound can be bent
 const ytWin = () => player && player.getIframe && player.getIframe().contentWindow;
 const ytPost = m => { const w = ytWin(); if (w) w.postMessage(m, '*'); };   // nothing secret in these: any origin may read them
-let want = null;   // { list, vid }: a playlist link that points at one video inside it
+const ytRate = r => ytFx && ytPost({ tapeDeck: 'wind', rate: r });   // the extension's fast-forward speed; 0 = normal
+let want = null;  // { list, vid }: a playlist link that points at one video inside it
 function loadYouTube(el, onState, onError, onFx) {   // el: where the player iframe goes; onFx: the extension answered
   addEventListener('message', e => {
     if (!e.data || e.data.tapeDeck !== 'ready' || !ytWin() || e.source !== ytWin()) return;
@@ -54,10 +55,13 @@ const yt = {
   },
   video: () => player.getVideoData(),   // { title, video_id }
   lastTrack: () => { const pl = player.getPlaylist(); return !pl || player.getPlaylistIndex() >= pl.length - 1; },
-  play: () => player.playVideo(), pause: () => player.pauseVideo(), eject: () => player.stopVideo(),
-  wind: () => player.pauseVideo(), next: () => player.nextVideo(), vol: v => player.setVolume(v),
+  play: () => player.playVideo(), pause: () => player.pauseVideo(), eject: () => { ytRate(0); player.stopVideo(); },
+  wind(dir, rate) {   // with the extension, fast-forward squeals like a file's: the video runs fast, pitch and all
+    if (ytFx && dir > 0) { ytRate(Math.min(16, rate)); player.playVideo(); } else player.pauseVideo();
+  },
+  next: () => player.nextVideo(), vol: v => player.setVolume(v),
   first: () => (player.getPlaylist() || []).length > 1 && player.playVideoAt(0),   // LOOP replays a playlist from track 1
-  seek(t, go) { player.seekTo(t, true); go ? player.playVideo() : player.pauseVideo(); },   // seekTo can start playback on its own
+  seek(t, go) { ytRate(0); player.seekTo(t, true); go ? player.playVideo() : player.pauseVideo(); },   // seekTo can start playback on its own
   time: () => player.getCurrentTime() || 0, dur: () => player.getDuration() || 0, playing: () => ytPlaying,
 };
 

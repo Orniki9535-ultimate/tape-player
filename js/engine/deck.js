@@ -46,9 +46,9 @@ function ytEvent(s) {
   const busy = wind || performance.now() < settle;       // we caused this event ourselves
   // the keys rule: YouTube playing while the deck isn't (it finished buffering after STOP/PAUSE, however long that
   // took, or the user clicked the video) gets paused again. Only PLAY starts the tape.
-  if (s === 1 && state !== 'play') return yt.pause();
+  if (s === 1 && state !== 'play' && !wind) return yt.pause();   // (fast-forward plays it on purpose, through the extension)
   if (s === 2 && state === 'play' && !busy) show('pause');
-  if (s === 0 && yt.lastTrack()) ended();
+  if (s === 0 && !wind && yt.lastTrack()) ended();
 }
 const ytError = () => { show('stop'); view.msg('ytError'); };
 const ytFxReady = () => {   // the FX extension answered (again, if the player page reloaded): hand it the settings
