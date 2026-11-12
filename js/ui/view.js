@@ -11,7 +11,11 @@ const view = {
     $('pause').classList.toggle('down', s === 'pause');
     $('deck').classList.toggle('on', s === 'play');
   },
-  well: out => $('well').classList.toggle('out', out),          // tape slides out / in
+  well(out) {   // tape slides out / in; each new tape is a random cassette design, never the same twice running
+    const c = $('cassette'), looks = ['', 'noir', 'diag', 'block'].filter(l => l !== c.dataset.look);
+    if (!out) c.dataset.look = looks[Math.random() * looks.length | 0];
+    $('well').classList.toggle('out', out);
+  },
   broken: on => $('cassette').classList.toggle('broken', on),   // snapped tape strand
   winding(dir, looping) {   // dir: -1 rewind, 1 fast-forward, 0 stopped
     $('rew').classList.toggle('down', dir < 0); $('ff').classList.toggle('down', dir > 0);
