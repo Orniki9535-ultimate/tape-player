@@ -12,7 +12,7 @@ const view = {
     $('deck').classList.toggle('on', s === 'play');
   },
   well(out) {   // tape slides out / in; each new tape is a random cassette design, never the same twice running
-    const c = $('cassette'), looks = ['', 'noir', 'diag', 'block'].filter(l => l !== c.dataset.look);
+    const c = $('cassette'), looks = ['', 'noir', 'diag', 'block', 'kraft', 'dots', 'neon'].filter(l => l !== c.dataset.look);
     if (!out) c.dataset.look = looks[Math.random() * looks.length | 0];
     $('well').classList.toggle('out', out);
   },
