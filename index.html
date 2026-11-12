@@ -15,7 +15,22 @@
 
   <section class="tapeside" data-t-aria="tapeSection">
   <div class="well out" id="well">
-    <div class="empty">NO TAPE</div>
+    <svg class="mech" viewBox="0 0 160 100" aria-hidden="true">   <!-- the deck's insides, seen through the door when no tape is in -->
+      <defs><radialGradient id="spin"><stop offset=".35" stop-color="#9a9a9a"/><stop offset="1" stop-color="#3a3a3a"/></radialGradient>
+        <linearGradient id="metal" x2="0" y2="1"><stop offset="0" stop-color="#d8d8d8"/><stop offset="1" stop-color="#6a6a6a"/></linearGradient>
+        <g id="spindle"><circle r="9" fill="#151515" stroke="#3c3c3c"/><circle r="5.2" fill="url(#spin)"/>
+          <path d="M0-5.6V5.6M-4.85-2.8 4.85 2.8M-4.85 2.8 4.85-2.8" stroke="#cfcfcf" stroke-width="1.4"/><circle r="1.6" fill="#222"/></g>
+        <g id="guide"><rect x="-3" width="6" height="80" rx="1.5" fill="#202020" stroke="#383838"/>
+          <path d="M-3 18h6M-3 40h6M-3 62h6" stroke="#0c0c0c" stroke-width="2"/></g></defs>
+      <use href="#guide" x="6" y="10"/><use href="#guide" x="154" y="10"/>
+      <use href="#spindle" x="55.85" y="57.8"/><use href="#spindle" x="104.15" y="57.8"/>
+      <rect x="66" y="34" width="28" height="11" rx="2" fill="#101010" stroke="#333"/>
+      <rect x="70" y="84" width="20" height="13" rx="1.5" fill="url(#metal)"/><path d="M80 84v13" stroke="#333" stroke-width=".8"/>
+      <rect x="50" y="88" width="9" height="8" rx="1" fill="url(#metal)"/>
+      <circle cx="40" cy="90" r="4.5" fill="#0d0d0d" stroke="#2c2c2c"/><circle cx="120" cy="90" r="4.5" fill="#0d0d0d" stroke="#2c2c2c"/>
+      <circle cx="33" cy="91" r="1.4" fill="#ccc"/><circle cx="127" cy="91" r="1.4" fill="#ccc"/>
+      <circle cx="64" cy="92" r="1.6" fill="#777"/><circle cx="96" cy="92" r="1.6" fill="#777"/>
+    </svg>
     <div class="cassette screws" id="cassette">
       <div class="label">
         <div class="side">A</div>
@@ -28,6 +43,7 @@
         </div>
       </div>
     </div>
+    <div class="door" id="door"></div>   <!-- smoky glass; tips open on its bottom hinge while a tape goes in or out -->
   </div>
 
   <div class="keys">

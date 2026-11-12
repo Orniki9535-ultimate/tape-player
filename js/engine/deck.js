@@ -111,7 +111,7 @@ function swapTape(title, id) {   // playlist's next track: the old tape slides o
     if (!loaded) return swapping = false;   // ejected mid-swap
     view.title(title); view.stripes(id); snapAt = 0; calm = 0; view.broken(false); pos = zero = 0;
     view.well(false);
-    swapT = setTimeout(() => { swapping = false; clunk(); if (resume && loaded) play(); }, 400);
+    swapT = setTimeout(() => { swapping = false; clunk(); if (resume && loaded) play(); }, 600);
   }, 450);
 }
 function insert(next, cue) {   // cue only: a tape doesn't play until you press PLAY
@@ -123,7 +123,7 @@ function insert(next, cue) {   // cue only: a tape doesn't play until you press 
     src = next; view.title(curTitle = ''); view.stripes(null); opts.bypass = false; tune(); view.source(src.bends()); view.screen(src === yt);
     cue(); src.vol(opts.vol);
     snapAt = 0; calm = 0; view.broken(false);   // a fresh tape (the snapped one leaves with its strand showing)
-    pos = zero = 0; loaded = true; view.well(false); setTimeout(clunk, 400);
+    pos = zero = 0; loaded = true; view.well(false); setTimeout(clunk, 600);
   }, wait);
 }
 function load(url) {   // a YouTube link

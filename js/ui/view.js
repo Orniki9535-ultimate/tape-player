@@ -15,6 +15,8 @@ const view = {
     const c = $('cassette'), looks = ['', 'noir', 'diag', 'block', 'kraft', 'dots', 'neon'].filter(l => l !== c.dataset.look);
     if (!out) c.dataset.look = looks[Math.random() * looks.length | 0];
     $('well').classList.toggle('out', out);
+    $('door').classList.add('open'); clearTimeout(view.shut);   // door opens, the tape moves (.2s + .45s), then it shuts
+    view.shut = setTimeout(() => $('door').classList.remove('open'), 750);
   },
   broken: on => $('cassette').classList.toggle('broken', on),   // snapped tape strand
   winding(dir, looping) {   // dir: -1 rewind, 1 fast-forward, 0 stopped
