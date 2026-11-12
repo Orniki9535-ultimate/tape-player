@@ -59,10 +59,16 @@
   #loop[aria-pressed=true] .lamp { background:#5f5; box-shadow:0 0 6px #5f5; }
   #loop b { display:inline-block; }
   .looping #loop b { animation:spin .5s linear infinite reverse; }
+  /* snapped tape: a loose strand flaps in the window, the cassette jolts */
+  .strand { position:absolute; inset:0; width:100%; height:100%; display:none; fill:none; stroke:#9a6034; stroke-width:3; stroke-linecap:round; }
+  .broken .strand { display:block; transform-origin:78% 50%; animation:sway 1.4s ease-in-out infinite alternate; }
+  .cassette.broken { animation:jolt .35s; }
+  @keyframes sway { to { transform:rotate(8deg); } }
+  @keyframes jolt { 25% { transform:translate(-4px,2px) rotate(-1.2deg); } 60% { transform:translate(3px,-1px) rotate(.8deg); } }
   .looping .label { animation:flash .5s ease-in-out infinite alternate; }
   @keyframes spin { to { transform:rotate(360deg); } }
   @keyframes flash { to { filter:brightness(1.15) sepia(.3); } }
-  @media (prefers-reduced-motion: reduce) { .looping #loop b, .looping .label { animation:none; } }
+  @media (prefers-reduced-motion: reduce) { .looping #loop b, .looping .label, .broken .strand, .cassette.broken { animation:none; } }
   button.load { background:linear-gradient(var(--mustard),#b4851f); padding:10px 16px; white-space:nowrap; }
   label:has(:disabled) { opacity:.35; }
   .deck.drop { outline:3px dashed var(--mustard); outline-offset:8px; }
@@ -78,7 +84,7 @@
   /* YouTube's terms: the player must stay visible, unobscured and at least 200x200 — so it's a small "monitor" */
   .monitor { margin-top:16px; border-radius:8px; overflow:hidden; width:200px; height:200px; box-shadow:0 0 0 3px #111; }
   .monitor iframe, #yt { width:100%; height:100%; display:block; }
-  .msgrow { display:flex; justify-content:space-between; align-items:center; gap:8px; min-height:26px; margin-top:4px; }
+  .msgrow { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; min-height:26px; margin-top:4px; }
   .msg { font-size:12px; color:#c88; }
   .msgrow label { display:flex; align-items:center; gap:4px; font-size:12px; color:#b9ab90; white-space:nowrap; cursor:pointer; }
   #skip { accent-color:var(--orange); margin:0; }
@@ -97,6 +103,8 @@
         <div class="window">
           <div class="reel"><div class="tape"></div><div class="hub"></div></div>
           <div class="reel"><div class="tape"></div><div class="hub"></div></div>
+          <svg class="strand" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M78 45 C70 95 58 15 50 65 S38 105 30 92" vector-effect="non-scaling-stroke"/></svg>
         </div>
       </div>
     </div>
@@ -109,7 +117,8 @@
     <input type="file" id="file" accept="audio/*" hidden>
   </div>
   <div class="msgrow"><div class="msg" id="msg" role="status"></div>
-    <label title="ตอนวนซ้ำ ไม่ต้องรอกรอกลับ — กลับไปต้นม้วนแล้วเล่นเลย"><input type="checkbox" id="skip" disabled> ข้ามการกรอกลับ</label></div>
+    <span class="count"><button class="mini" id="snap" title="ลองให้เทปขาด! (ต้องเล่นอยู่) — เพลงจะเงียบไปพักนึงแล้วค่อยๆ ดังกลับมาเอง">✂ เทปขาด</button>
+    <label title="ตอนวนซ้ำ ไม่ต้องรอกรอกลับ — กลับไปต้นม้วนแล้วเล่นเลย"><input type="checkbox" id="skip" disabled> ข้ามการกรอกลับ</label></span></div>
 
   <div class="keys">
     <button id="pause" aria-label="พัก" title="พัก (กดอีกครั้งเพื่อเล่นต่อ)">❚❚</button>
@@ -146,6 +155,8 @@ let want = null;             // { list, vid }: a playlist link that points at on
 let src, loaded = false;     // src: where the music comes from (yt | file); loaded: a cassette is in the well
 let state = 'stop';          // 'stop' | 'play' | 'pause' — the deck's keys, not YouTube's state
 let wind = 0, wasPlaying = false, preroll = 0, settle = 0;
+let snapAt = 0, loose = 0;      // snapAt: when the tape snapped (ms); loose: free-spinning take-up reel
+const CUT = 120, GAP = 2500, FADE = 3000;   // ms: tape stretches, then silence, then the music fades back in
 let autoRew = false;         // LOOP is rewinding the tape by itself, to play it again
 let pos = 0, zero = 0;       // tape position (s) as shown by reels + counter; counter zero point
 
@@ -214,6 +225,17 @@ const bypass = () => $('ab').getAttribute('aria-pressed') === 'true';   // A/B: 
 const hissLevel = () => bypass() ? 0 : ($('hiss').value / 100) * 0.12;
 function hissOn()  { if (hiss) hiss.setTargetAtTime(hissLevel(), ctx.currentTime, 0.3); }
 function hissOff() { if (hiss) hiss.setTargetAtTime(0, ctx.currentTime, 0.1); }
+function snapSound(at) {   // a sharp pop, then the loose end thwapping the spinning reel, slowing down
+  initAudio(); at += ctx.currentTime;
+  const len = ctx.sampleRate * 0.04, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = rnd() * (1 - i / len) ** 3;
+  for (let k = 0; k < 16; k++, at += k === 1 ? 0.15 : 0.03 + k * 0.012) {
+    const n = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    n.buffer = buf; f.type = k ? 'lowpass' : 'highpass'; f.frequency.value = k ? 1400 : 2000;
+    g.gain.value = k ? 0.6 * (1 - k / 16) : 1;
+    n.connect(f).connect(g).connect(ctx.destination); n.start(at);
+  }
+}
 function clunk() {  // mechanical key
   initAudio();
   const o = ctx.createOscillator(), g = ctx.createGain();
@@ -335,6 +357,13 @@ function ended() {   // end of tape: auto-stop — and with LOOP on, rewind by i
   }, 600);
 }
 const noTape = () => msg('ยังไม่ได้ใส่เทป');
+function snap() {   // the tape stretches (pitch sags), snaps, goes silent, then the music fades back in where it is
+  if (!loaded || snapAt) return;
+  if (state !== 'play') return msg('เทปต้องเล่นอยู่ถึงจะขาดได้นะ');
+  speed *= 0.5;                                    // drag: reels slow and file audio sags in pitch
+  snapAt = performance.now() + CUT; snapSound(CUT / 1000);
+  setTimeout(() => { hissOff(); loose = 8; $('cassette').classList.add('broken'); msg('✂ เทปขาด! ต่อเทปแป๊บนึงนะ...'); }, CUT);
+}
 function play() {
   if (!loaded) return noTape();
   if (wind) windEnd();   // PLAY during the LOOP rewind: play from here
@@ -355,7 +384,7 @@ function stop() {   // STOP/EJECT is one key, like a real deck
   if (wind) return windEnd();   // STOP during the LOOP rewind cancels it (doesn't eject mid-wind)
   if (state !== 'stop') { src.pause(); return show('stop'); }
   if (!loaded) return;
-  loaded = false; src.eject(); $('well').classList.add('out');
+  loaded = false; src.eject(); $('well').classList.add('out'); msg('');
 }
 function insert(next, cue) {   // cue only: a tape doesn't play until you press PLAY
   msg(''); clearTimeout(preroll); show('stop');
@@ -367,6 +396,7 @@ function insert(next, cue) {   // cue only: a tape doesn't play until you press 
     src = next; setTitle(curTitle = ''); $('ab').setAttribute('aria-pressed', false); cue(); src.vol($('vol').value);
     $('monitor').hidden = src === file;                                  // monitor is YouTube-only,
     for (const id of ['wow', 'age', 'ab']) $(id).disabled = src !== file;   // sound-bending controls are file-only
+    snapAt = 0; $('cassette').classList.remove('broken');   // a fresh tape (the snapped one leaves with its strand showing)
     pos = zero = 0; loaded = true; c.classList.remove('out'); setTimeout(clunk, 400);
   }, swap);
 }
@@ -409,6 +439,7 @@ $('play').onclick  = key(play);
 $('pause').onclick = key(pause);
 $('stop').onclick  = key(stop);
 $('next').onclick  = key(() => loaded ? src.next() : noTape());
+$('snap').onclick  = snap;
 $('pick').onclick  = () => $('file').click();
 $('file').onchange = e => { clunk(); loadFile(e.target.files[0]); e.target.value = ''; };
 const deck = $('deck');   // drag a file onto the deck
@@ -458,8 +489,14 @@ function frame(now) {
   const target = !on ? 0 : wind ? wind * 5 : state === 'play' ? 1 : 0;
   speed += (target - speed) * Math.min(1, dt * 8);                        // motor inertia
   if (on && src.motor) src.motor(speed);                                  // file audio follows the motor up and down
+  if (snapAt && on) {                                                     // snapped: silent for GAP, then fade back in
+    const e = now - snapAt, duck = e < 0 ? 1 : e < GAP ? 0 : Math.min(1, (e - GAP) / FADE);
+    src.vol($('vol').value * duck * duck);
+    if (e > 0 && duck === 1) { snapAt = 0; $('cassette').classList.remove('broken'); msg(''); if (state === 'play') hissOn(); }
+  }
+  loose *= Math.exp(-dt * 1.6);                                           // loose take-up reel spins down
   r.forEach((cm, i) => {
-    ang[i] -= speed * dt * 273 / cm;                                      // 4.76 cm/s tape speed -> deg/s
+    ang[i] -= (speed + (i ? loose : 0)) * dt * 273 / cm;                                      // 4.76 cm/s tape speed -> deg/s
     hubs[i].style.transform = `rotate(${ang[i]}deg)`;
     tapes[i].style.width = tapes[i].style.height = cm * 78 + '%';
   });
