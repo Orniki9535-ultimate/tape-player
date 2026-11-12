@@ -10,19 +10,21 @@ body { margin:0; min-height:100vh; display:grid; grid-template-columns:minmax(0,
 .on .led { background:#f33; box-shadow:0 0 8px #f33; }
 
 /* cassette */
-.well { position:relative; overflow:hidden; background:#111; border-radius:10px; padding:14px; box-shadow:inset 0 4px 12px #000; }
+.well { position:relative; background:#111; border-radius:10px; padding:14px; box-shadow:inset 0 4px 12px #000; }
 /* mechanism under the cassette (same box, so the spindles line up with the reel hubs) + a smoky door with its eject tab over it all */
 .mech { position:absolute; inset:14px; width:calc(100% - 28px); height:calc(100% - 28px); border-radius:6px; background:linear-gradient(#262626,#141414); }
 .door { position:absolute; inset:0; z-index:1; pointer-events:none; border-radius:inherit; transform-origin:50% 100%;
         box-shadow:inset 0 0 0 5px #1c1c1c, inset 0 0 0 6px #444, inset 0 6px 14px #000c;
         background:linear-gradient(115deg, #fff3 0 18%, #fff0 30% 62%, #ffffff0d 70% 76%, #fff0 82%), #8890a01a;
         transition:transform .2s ease-in-out, opacity .2s; }
-.door.open { transform:perspective(700px) rotateX(-55deg); opacity:.55; }
+.door.open { transform:perspective(1400px) rotateX(-35deg); opacity:.6; }
 .door::before { content:""; position:absolute; top:0; left:41%; width:18%; height:12px; border-radius:0 0 4px 4px;
                 background:linear-gradient(#bdbdbd,#7c7c7c); box-shadow:0 2px 4px #000a, inset 0 -1px 0 #fff5; }
 .cassette { position:relative; aspect-ratio:1.6; background:linear-gradient(#cfc3a8,#b8ab8f); border-radius:10px; padding:7% 6%;
-            transition:transform .45s cubic-bezier(.3,1.2,.6,1) .2s; }   /* .2s: waits for the door to open */
-.out .cassette { transform:translateY(-115%); transition-timing-function:ease-in; }
+            transition:transform .45s cubic-bezier(.3,1.2,.6,1) .2s, opacity .1s .2s, box-shadow .45s .2s; }   /* .2s: waits for the door to open */
+/* out: held above the deck in a hand (lifted shadow), fades once it has cleared the frame */
+.out .cassette { transform:translateY(-135%); opacity:0; box-shadow:0 24px 30px #000a;
+                 transition:transform .45s ease-in .2s, opacity .2s .5s, box-shadow .45s .2s; }
 .label { height:100%; background:var(--cream); border-radius:6px; position:relative; overflow:hidden;
          --s1:var(--orange); --s2:var(--mustard); --s3:var(--mustard);   /* stripes: tint() sets them from the video thumbnail */
          background-image:linear-gradient(var(--s1) 0 14%, var(--s2) 14% 18%, var(--s3) 18% 22%, transparent 22%); }
