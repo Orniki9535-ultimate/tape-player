@@ -117,7 +117,7 @@
     <input type="file" id="file" accept="audio/*" hidden>
   </div>
   <div class="msgrow"><div class="msg" id="msg" role="status"></div>
-    <span class="count"><button class="mini" id="snap" title="ลองให้เทปขาด! (ต้องเล่นอยู่) — ดีดเทปออกแล้วใส่ใหม่เพื่อเล่นต่อ">✂ เทปขาด</button>
+    <span class="count"><button class="mini" id="snap" title="ลองให้เทปขาด! (ต้องเล่นอยู่) — เพลงจะเงียบไปพักนึงแล้วค่อยๆ ดังกลับมาเอง">✂ เทปขาด</button>
     <label title="ตอนวนซ้ำ ไม่ต้องรอกรอกลับ — กลับไปต้นม้วนแล้วเล่นเลย"><input type="checkbox" id="skip" disabled> ข้ามการกรอกลับ</label></span></div>
 
   <div class="keys">
@@ -155,7 +155,8 @@ let want = null;             // { list, vid }: a playlist link that points at on
 let src, loaded = false;     // src: where the music comes from (yt | file); loaded: a cassette is in the well
 let state = 'stop';          // 'stop' | 'play' | 'pause' — the deck's keys, not YouTube's state
 let wind = 0, wasPlaying = false, preroll = 0, settle = 0;
-let broken = false, loose = 0;   // snapped tape: deck won't run until you eject; loose: free-spinning take-up reel
+let snapAt = 0, loose = 0;      // snapAt: when the tape snapped (ms); loose: free-spinning take-up reel
+const CUT = 120, GAP = 2500, FADE = 3000;   // ms: tape stretches, then silence, then the music fades back in
 let autoRew = false;         // LOOP is rewinding the tape by itself, to play it again
 let pos = 0, zero = 0;       // tape position (s) as shown by reels + counter; counter zero point
 
@@ -181,7 +182,7 @@ window.onYouTubeIframeAPIReady = () => {
         const v = player.getVideoData();
         if (loaded && v.title && v.title !== curTitle) setTitle(curTitle = v.title);
         const busy = wind || performance.now() < settle;       // we caused this event ourselves
-        if (e.data === 1 && state !== 'play' && !busy && !broken) show('play');   // user clicked inside the monitor
+        if (e.data === 1 && state !== 'play' && !busy) show('play');   // user clicked inside the monitor
         if (e.data === 2 && state === 'play' && !busy) show('pause');
         if (e.data === 0 && lastTrack()) ended();
       },
@@ -224,14 +225,15 @@ const bypass = () => $('ab').getAttribute('aria-pressed') === 'true';   // A/B: 
 const hissLevel = () => bypass() ? 0 : ($('hiss').value / 100) * 0.12;
 function hissOn()  { if (hiss) hiss.setTargetAtTime(hissLevel(), ctx.currentTime, 0.3); }
 function hissOff() { if (hiss) hiss.setTargetAtTime(0, ctx.currentTime, 0.1); }
-function snapSound() {   // the pop, then the loose end slapping the spinning reel, slowing down
-  initAudio();
+function snapSound(at) {   // a sharp pop, then the loose end thwapping the spinning reel, slowing down
+  initAudio(); at += ctx.currentTime;
   const len = ctx.sampleRate * 0.04, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
   for (let i = 0; i < len; i++) d[i] = rnd() * (1 - i / len) ** 3;
-  for (let k = 0, at = ctx.currentTime; k < 14; k++, at += k === 1 ? 0.15 : 0.03 + k * 0.012) {
-    const n = ctx.createBufferSource(), g = ctx.createGain();
-    n.buffer = buf; g.gain.value = k ? 0.3 * (1 - k / 14) : 0.9;
-    n.connect(g).connect(ctx.destination); n.start(at);
+  for (let k = 0; k < 16; k++, at += k === 1 ? 0.15 : 0.03 + k * 0.012) {
+    const n = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    n.buffer = buf; f.type = k ? 'lowpass' : 'highpass'; f.frequency.value = k ? 1400 : 2000;
+    g.gain.value = k ? 0.6 * (1 - k / 16) : 1;
+    n.connect(f).connect(g).connect(ctx.destination); n.start(at);
   }
 }
 function clunk() {  // mechanical key
@@ -355,17 +357,15 @@ function ended() {   // end of tape: auto-stop — and with LOOP on, rewind by i
   }, 600);
 }
 const noTape = () => msg('ยังไม่ได้ใส่เทป');
-const isBroken = () => broken && msg('เทปขาดแล้ว 😢 กด ■⏏ ดีดออกแล้วใส่ม้วนใหม่นะ');
-function snap() {
-  if (!loaded || isBroken()) return;
+function snap() {   // the tape stretches (pitch sags), snaps, goes silent, then the music fades back in where it is
+  if (!loaded || snapAt) return;
   if (state !== 'play') return msg('เทปต้องเล่นอยู่ถึงจะขาดได้นะ');
-  clearTimeout(preroll); src === file ? audio.pause() : src.pause();   // the tape left the head: sound cuts dead
-  broken = true; loose = 8; show('stop'); snapSound(); isBroken();
-  $('cassette').classList.add('broken');
+  speed *= 0.5;                                    // drag: reels slow and file audio sags in pitch
+  snapAt = performance.now() + CUT; snapSound(CUT / 1000);
+  setTimeout(() => { hissOff(); loose = 8; $('cassette').classList.add('broken'); msg('✂ เทปขาด! ต่อเทปแป๊บนึงนะ...'); }, CUT);
 }
 function play() {
   if (!loaded) return noTape();
-  if (isBroken()) return;
   if (wind) windEnd();   // PLAY during the LOOP rewind: play from here
   if (state === 'play') return;
   const d = src.dur();
@@ -396,7 +396,7 @@ function insert(next, cue) {   // cue only: a tape doesn't play until you press 
     src = next; setTitle(curTitle = ''); $('ab').setAttribute('aria-pressed', false); cue(); src.vol($('vol').value);
     $('monitor').hidden = src === file;                                  // monitor is YouTube-only,
     for (const id of ['wow', 'age', 'ab']) $(id).disabled = src !== file;   // sound-bending controls are file-only
-    broken = false; $('cassette').classList.remove('broken');   // a fresh tape (the snapped one leaves with its strand showing)
+    snapAt = 0; $('cassette').classList.remove('broken');   // a fresh tape (the snapped one leaves with its strand showing)
     pos = zero = 0; loaded = true; c.classList.remove('out'); setTimeout(clunk, 400);
   }, swap);
 }
@@ -412,7 +412,6 @@ function loadFile(f) {   // stays in the browser: an object URL, nothing is uplo
 }
 function windStart(dir) {
   if (!loaded) return noTape();
-  if (isBroken()) return;
   if (wind) return;
   clearTimeout(preroll); msg('');
   wasPlaying = state === 'play'; wind = dir;
@@ -439,7 +438,7 @@ $('url').onkeydown = e => e.key === 'Enter' && $('load').click();
 $('play').onclick  = key(play);
 $('pause').onclick = key(pause);
 $('stop').onclick  = key(stop);
-$('next').onclick  = key(() => !loaded ? noTape() : isBroken() || src.next());
+$('next').onclick  = key(() => loaded ? src.next() : noTape());
 $('snap').onclick  = snap;
 $('pick').onclick  = () => $('file').click();
 $('file').onchange = e => { clunk(); loadFile(e.target.files[0]); e.target.value = ''; };
@@ -490,6 +489,11 @@ function frame(now) {
   const target = !on ? 0 : wind ? wind * 5 : state === 'play' ? 1 : 0;
   speed += (target - speed) * Math.min(1, dt * 8);                        // motor inertia
   if (on && src.motor) src.motor(speed);                                  // file audio follows the motor up and down
+  if (snapAt && on) {                                                     // snapped: silent for GAP, then fade back in
+    const e = now - snapAt, duck = e < 0 ? 1 : e < GAP ? 0 : Math.min(1, (e - GAP) / FADE);
+    src.vol($('vol').value * duck * duck);
+    if (e > 0 && duck === 1) { snapAt = 0; $('cassette').classList.remove('broken'); msg(''); if (state === 'play') hissOn(); }
+  }
   loose *= Math.exp(-dt * 1.6);                                           // loose take-up reel spins down
   r.forEach((cm, i) => {
     ang[i] -= (speed + (i ? loose : 0)) * dt * 273 / cm;                                      // 4.76 cm/s tape speed -> deg/s
