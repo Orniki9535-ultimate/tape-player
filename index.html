@@ -228,11 +228,15 @@ window.onYouTubeIframeAPIReady = () => {
         if (src !== yt) return;
         if (e.data === 5 && want) {   // playlist cued: only now can we find the linked video in it, and re-cue there
           const { list, vid } = want, i = (player.getPlaylist() || []).indexOf(vid); want = null;
-          if (i > 0) return player.cuePlaylist({ list, index: i });
+          if (i > 0) { curTitle = ''; return player.cuePlaylist({ list, index: i }); }   // still the first tape, not a swap
         }
+        if (swapping && e.data === 1) return player.pauseVideo();   // the next track started on its own: wait for the new tape
         ytPlaying = e.data === 1;
         const v = player.getVideoData();
-        if (loaded && v.title && v.title !== curTitle) { setTitle(curTitle = v.title); tint(v.video_id); }
+        if (loaded && v.title && v.title !== curTitle) {
+          const swap = curTitle && !wind;   // the playlist moved on (not the first title of a fresh tape)
+          curTitle = v.title; swap ? swapTape(v.title, v.video_id) : (setTitle(v.title), tint(v.video_id));
+        }
         const busy = wind || performance.now() < settle;       // we caused this event ourselves
         if (e.data === 1 && state !== 'play' && !busy) show('play');   // user clicked inside the monitor
         if (e.data === 2 && state === 'play' && !busy) show('pause');
@@ -469,8 +473,21 @@ function stop() {   // STOP/EJECT is one key, like a real deck
   if (!loaded) return;
   loaded = false; src.eject(); $('well').classList.add('out'); msg('');
 }
+let swapT = 0, swapping = false;
+function swapTape(title, id) {   // playlist's next track: the old tape slides out, the new one goes in, then play on
+  const resume = state === 'play';
+  clearTimeout(swapT); clearTimeout(preroll);
+  swapping = true; settle = performance.now() + 1500; player.pauseVideo(); show('stop'); clunk();
+  $('well').classList.add('out');
+  swapT = setTimeout(() => {
+    if (!loaded) return swapping = false;   // ejected mid-swap
+    setTitle(title); tint(id); snapAt = 0; $('cassette').classList.remove('broken'); pos = zero = 0;
+    $('well').classList.remove('out');
+    swapT = setTimeout(() => { swapping = false; clunk(); if (resume && loaded) play(); }, 400);
+  }, 450);
+}
 function insert(next, cue) {   // cue only: a tape doesn't play until you press PLAY
-  msg(''); clearTimeout(preroll); show('stop');
+  msg(''); clearTimeout(preroll); clearTimeout(swapT); swapping = false; show('stop');
   if (loaded) src.eject();
   loaded = false;
   const c = $('well'), swap = c.classList.contains('out') ? 0 : 450;   // old tape slides out first
