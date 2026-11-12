@@ -5,14 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>เครื่องเล่นเทป</title>
 <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@700&family=Mali:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <style>
   :root { --wood:#5a3a22; --body:#2b2622; --cream:#efe4cc; --orange:#e0782f; --mustard:#d9a93a; }
   * { box-sizing:border-box; }
   body { margin:0; min-height:100vh; display:grid; place-items:center; padding:24px;
          background:radial-gradient(circle at 30% 20%, #3b2f27, #16120f); font-family:'Mali',sans-serif; color:var(--cream); }
-  .deck { width:min(560px,100%); background:linear-gradient(#3a332d,var(--body)); border-radius:18px; padding:22px;
+  .deck { width:min(1000px,100%); display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:0 26px; align-items:start; background:linear-gradient(#3a332d,var(--body)); border-radius:18px; padding:22px;
           box-shadow:0 0 0 6px var(--wood), 0 20px 50px #000a, inset 0 1px 0 #fff2; }
-  .brand { display:flex; justify-content:space-between; align-items:center; font-family:'Courier Prime',monospace;
+  .brand { grid-column:1/-1; display:flex; justify-content:space-between; align-items:center; font-family:'Courier Prime',monospace;
            letter-spacing:3px; font-size:13px; color:#b9ab90; margin-bottom:14px; }
   .led { width:10px; height:10px; border-radius:50%; background:#511; display:inline-block; margin-right:6px; }
   .on .led { background:#f33; box-shadow:0 0 8px #f33; }
@@ -45,7 +46,8 @@
   button.mini[aria-pressed=true] { transform:translateY(2px); box-shadow:0 1px 0 #555; background:linear-gradient(var(--mustard),#b4851f); }
 
   /* controls */
-  .row { display:flex; gap:10px; margin-top:16px; }
+  .row { display:flex; flex-wrap:wrap; gap:10px; }
+  .row #url { flex:10 1 200px; } .btns { flex:1 0 auto; display:flex; gap:10px; } .btns .load { flex:1; }   /* both buttons drop under the link together on narrow screens */
   input[type=text] { flex:1; min-width:0; padding:10px 12px; border-radius:8px; border:0; background:#1b1714; color:var(--cream);
                      font-family:'Courier Prime'; box-shadow:inset 0 2px 6px #000; }
   .keys { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-top:16px; }
@@ -53,6 +55,8 @@
            background:linear-gradient(#ddd,#a9a9a9); box-shadow:0 5px 0 #555, 0 6px 8px #0008; transition:transform .05s, box-shadow .05s; }
   button:active, button.down { transform:translateY(4px); box-shadow:0 1px 0 #555; }
   /* LOOP key: latches down with a green lamp; the arrow spins while the deck auto-rewinds */
+  .keys .bi { font-size:20px; line-height:1; vertical-align:middle; }
+  #stop .bi { font-size:17px; margin:0 1px; }   /* two icons share one key */
   #loop { position:relative; }
   #loop .lamp { position:absolute; top:4px; right:4px; width:6px; height:6px; border-radius:50%; background:#152; }
   #loop[aria-pressed=true] { transform:translateY(4px); box-shadow:0 1px 0 #555; }
@@ -79,21 +83,43 @@
                background:linear-gradient(#000,#333 45%,#333 55%,#000); }
   .counter b { display:block; }
   button.zero { width:18px; height:18px; padding:0; border-radius:3px; background:#222; box-shadow:0 3px 0 #000; }
-  .meta label { flex:1; min-width:70px; display:flex; flex-direction:column; gap:2px; }
   input[type=range] { accent-color:var(--orange); width:100%; margin:0; }
   /* YouTube's terms: the player must stay visible, unobscured and at least 200x200 — so it's a small "monitor" */
-  .monitor { margin-top:16px; border-radius:8px; overflow:hidden; width:200px; height:200px; box-shadow:0 0 0 3px #111; }
+  .monitor { border-radius:8px; overflow:hidden; width:200px; height:200px; box-shadow:0 0 0 3px #111; }
   .monitor iframe, #yt { width:100%; height:100%; display:block; }
-  .msgrow { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; min-height:26px; margin-top:4px; }
-  .msg { font-size:12px; color:#c88; }
-  .msgrow label { display:flex; align-items:center; gap:4px; font-size:12px; color:#b9ab90; white-space:nowrap; cursor:pointer; }
-  #skip { accent-color:var(--orange); margin:0; }
+  .msg { font-size:12px; color:#e9a08a; margin-top:8px; } .msg:empty { display:none; }
+  .count small { font:700 10px 'Courier Prime'; letter-spacing:2px; color:#8f846f; }
+  /* settings: one inset panel per topic */
+  .settings { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; }
+  .group { background:#0003; border:1px solid #fff1; border-radius:12px; padding:12px 14px 14px; box-shadow:inset 0 1px 0 #fff1; }
+  .group h2 { display:flex; align-items:center; gap:8px; margin:0 0 10px; font:700 12px 'Mali'; letter-spacing:.5px; color:#d6c9ac; }
+  .group h2 .mini { margin-left:auto; }
+  .tag { font-size:10px; font-weight:500; color:#8f846f; border:1px solid #fff2; border-radius:20px; padding:1px 8px; }
+  .sliders { display:grid; grid-template-columns:1fr 1fr; gap:10px 18px; }
+  .sliders label { display:flex; flex-direction:column; gap:6px; font-size:13px; color:#b9ab90; }
+  .switch { display:flex; align-items:center; gap:10px; font-size:13px; color:#b9ab90; cursor:pointer; padding:4px 0; }
+  .switch input { appearance:none; flex:none; position:relative; width:36px; height:20px; margin:0; border-radius:10px; cursor:inherit;
+                  background:#1b1714; box-shadow:inset 0 2px 5px #000; transition:background .2s; }
+  .switch input::before { content:""; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%;
+                          background:linear-gradient(#eee,#aaa); box-shadow:0 1px 3px #000a; transition:transform .2s; }
+  .switch input:checked { background:var(--orange); }
+  .switch input:checked::before { transform:translateX(16px); }
+  .screen:has(#monitor[hidden]) { display:none; }   /* monitor is YouTube-only */
+  .screen .monitor { margin-inline:auto; }
+  button:hover:not(:disabled) { filter:brightness(1.08); }
+  :focus-visible { outline:2px solid var(--mustard); outline-offset:2px; }
+  @media (max-width:760px) {
+    body { padding:12px; place-items:start center; }
+    .deck { grid-template-columns:minmax(0,1fr); padding:16px; }
+    .settings { margin-top:18px; }
+  }
 </style>
 </head>
 <body>
 <div class="deck" id="deck">
   <div class="brand"><span><i class="led"></i>STEREO CASSETTE DECK</span><span>BOOM-80</span></div>
 
+  <section class="tapeside" aria-label="เทป">
   <div class="well out" id="well">
     <div class="empty">NO TAPE</div>
     <div class="cassette screws" id="cassette">
@@ -110,37 +136,61 @@
     </div>
   </div>
 
-  <div class="row">
-    <input type="text" id="url" aria-label="ลิงก์ YouTube" placeholder="ลิงก์ YouTube — หรือลากไฟล์เสียงมาวาง">
-    <button class="load" id="load">ใส่เทป</button>
-    <button class="load" id="pick" title="เลือกไฟล์เสียงจากเครื่อง (ได้เสียงเทปยานของจริง)">ไฟล์</button>
-    <input type="file" id="file" accept="audio/*" hidden>
-  </div>
-  <div class="msgrow"><div class="msg" id="msg" role="status"></div>
-    <span class="count"><label title="ระหว่างเล่น เทปอาจขาดได้ทุกเมื่อ — เพลงจะเงียบไปพักนึงแล้วค่อยๆ ดังกลับมาเอง"><input type="checkbox" id="snap" checked> ✂ เทปขาดแบบสุ่ม</label>
-    <label title="ตอนวนซ้ำ ไม่ต้องรอกรอกลับ — กลับไปต้นม้วนแล้วเล่นเลย"><input type="checkbox" id="skip" disabled> ข้ามการกรอกลับ</label></span></div>
-
   <div class="keys">
-    <button id="pause" aria-label="พัก" title="พัก (กดอีกครั้งเพื่อเล่นต่อ)">❚❚</button>
-    <button id="rew" aria-label="กรอกลับ" title="กดค้างเพื่อกรอกลับ">◀◀</button>
-    <button id="play" aria-label="เล่น" title="เล่น">▶</button>
-    <button id="ff" aria-label="กรอไปข้างหน้า" title="กดค้างเพื่อกรอไปข้างหน้า">▶▶</button>
-    <button id="next" aria-label="เพลงถัดไป" title="เพลงถัดไป (เพลย์ลิสต์)">⏭&#xFE0E;</button>
-    <button id="stop" aria-label="หยุด / ดีดเทปออก" title="หยุด — กดตอนหยุดอยู่เพื่อดีดเทปออก">■ ⏏&#xFE0E;</button>
-    <button id="loop" aria-label="เล่นวนซ้ำ" aria-pressed="false" title="วนซ้ำ — เล่นจบม้วนแล้วกรอกลับไปเล่นใหม่เอง"><b>↻</b><i class="lamp"></i></button>
+    <button id="pause" aria-label="พัก" title="พัก (กดอีกครั้งเพื่อเล่นต่อ)"><i class="bi bi-pause-fill" aria-hidden="true"></i></button>
+    <button id="rew" aria-label="กรอกลับ" title="กดค้างเพื่อกรอกลับ"><i class="bi bi-rewind-fill" aria-hidden="true"></i></button>
+    <button id="play" aria-label="เล่น" title="เล่น"><i class="bi bi-play-fill" aria-hidden="true"></i></button>
+    <button id="ff" aria-label="กรอไปข้างหน้า" title="กดค้างเพื่อกรอไปข้างหน้า"><i class="bi bi-fast-forward-fill" aria-hidden="true"></i></button>
+    <button id="next" aria-label="เพลงถัดไป" title="เพลงถัดไป (เพลย์ลิสต์)"><i class="bi bi-skip-end-fill" aria-hidden="true"></i></button>
+    <button id="stop" aria-label="หยุด / ดีดเทปออก" title="หยุด — กดตอนหยุดอยู่เพื่อดีดเทปออก"><i class="bi bi-stop-fill" aria-hidden="true"></i><i class="bi bi-eject-fill" aria-hidden="true"></i></button>
+    <button id="loop" aria-label="เล่นวนซ้ำ" aria-pressed="false" title="วนซ้ำ — เล่นจบม้วนแล้วกรอกลับไปเล่นใหม่เอง"><b><i class="bi bi-arrow-repeat" aria-hidden="true"></i></b><i class="lamp"></i></button>
   </div>
 
   <div class="meta">
-    <span class="count"><span class="counter" id="counter" aria-hidden="true"></span>
+    <span class="count"><small>COUNTER</small><span class="counter" id="counter" aria-hidden="true"></span>
       <button class="zero" id="zero" aria-label="รีเซ็ตตัวนับ" title="รีเซ็ตตัวนับ"></button></span>
-    <label>เสียงซ่า <input type="range" id="hiss" min="0" max="100" value="35"></label>
-    <label title="เสียงแกว่งแบบเทปยาน — ใช้ได้กับไฟล์เสียงเท่านั้น">เทปยาน <input type="range" id="wow" min="0" max="100" value="50" disabled></label>
-    <label title="เสียงทึบ อิ่มตัว และวูบหายแบบเทปเก่า — ใช้ได้กับไฟล์เสียงเท่านั้น">ความเก่า <input type="range" id="age" min="0" max="100" value="60" disabled></label>
-    <label>เสียงเพลง <input type="range" id="vol" min="0" max="100" value="80"></label>
-    <button class="mini" id="ab" aria-pressed="false" disabled title="กดสลับฟังเสียงต้นฉบับ (ไม่ผ่านเอฟเฟกต์ ไม่มีเสียงซ่า) เทียบกับเสียงผ่านเครื่อง — ใช้ได้กับไฟล์เสียงเท่านั้น">ต้นฉบับ</button>
+  </div>
+  </section>
+
+  <section class="settings" aria-label="การตั้งค่า">
+  <div class="group">
+    <h2>ใส่เทป</h2>
+    <div class="row">
+      <input type="text" id="url" aria-label="ลิงก์ YouTube" placeholder="วางลิงก์ YouTube หรือลากไฟล์เสียงมาวาง">
+      <span class="btns"><button class="load" id="load">ใส่เทป</button>
+      <button class="load" id="pick" title="เลือกไฟล์เสียงจากเครื่อง (ได้เสียงเทปยานของจริง)">ไฟล์</button></span>
+      <input type="file" id="file" accept="audio/*" hidden>
+    </div>
+    <div class="msg" id="msg" role="status"></div>
   </div>
 
-  <div class="monitor" id="monitor"><div id="yt"></div></div>
+  <div class="group">
+    <h2>เสียง</h2>
+    <div class="sliders">
+      <label>เสียงเพลง <input type="range" id="vol" min="0" max="100" value="80"></label>
+      <label>เสียงซ่า <input type="range" id="hiss" min="0" max="100" value="35"></label>
+    </div>
+  </div>
+
+  <div class="group">
+    <h2>เสียงเทปเก่า <span class="tag">ไฟล์เสียงเท่านั้น</span> <button class="mini" id="ab" aria-pressed="false" disabled title="กดสลับฟังเสียงต้นฉบับ (ไม่ผ่านเอฟเฟกต์ ไม่มีเสียงซ่า) เทียบกับเสียงผ่านเครื่อง — ใช้ได้กับไฟล์เสียงเท่านั้น">ต้นฉบับ</button></h2>
+    <div class="sliders">
+      <label title="เสียงแกว่งแบบเทปยาน — ใช้ได้กับไฟล์เสียงเท่านั้น">เทปยาน <input type="range" id="wow" min="0" max="100" value="50" disabled></label>
+      <label title="เสียงทึบ อิ่มตัว และวูบหายแบบเทปเก่า — ใช้ได้กับไฟล์เสียงเท่านั้น">ความเก่า <input type="range" id="age" min="0" max="100" value="60" disabled></label>
+    </div>
+  </div>
+
+  <div class="group switches">
+    <h2>ตัวเลือก</h2>
+    <label class="switch" title="ระหว่างเล่น เทปอาจขาดได้ทุกเมื่อ — เพลงจะเงียบไปพักนึงแล้วค่อยๆ ดังกลับมาเอง"><input type="checkbox" id="snap" checked> ✂ เทปขาดแบบสุ่ม</label>
+    <label class="switch" title="ตอนวนซ้ำ ไม่ต้องรอกรอกลับ — กลับไปต้นม้วนแล้วเล่นเลย"><input type="checkbox" id="skip" disabled> ข้ามการกรอกลับ</label>
+  </div>
+
+  <div class="group screen">
+    <h2>จอ YouTube</h2>
+    <div class="monitor" id="monitor"><div id="yt"></div></div>
+  </div>
+  </section>
 </div>
 
 <script>
