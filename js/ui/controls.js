@@ -18,6 +18,18 @@ for (const id of ['snap', 'skip']) {
 const setLoop = on => { $('loop').setAttribute('aria-pressed', on); $('skip').disabled = !on; setOpt('loop', on); };   // skip only means something with LOOP on
 setLoop(saved('loop') === 'true');
 
+// ---- language: English unless the visitor picked Thai before ----
+const useLang = l => { setLang(l); view.msg(view.shown); save('lang', lang); };
+setLang(saved('lang') || 'en');
+$('lang').onclick = () => useLang(lang === 'en' ? 'th' : 'en');
+
+// ---- the little ? bubbles: hover (or keyboard focus) shows the tooltip; on touch screens, tap to open ----
+document.addEventListener('click', e => {
+  const tip = e.target.closest('.tip');
+  for (const o of document.querySelectorAll('.tip.open')) if (o !== tip) o.classList.remove('open');
+  if (tip) { e.preventDefault(); tip.classList.toggle('open'); }   // inside a label: don't flip its switch
+});
+
 // ---- keys ----
 const key = fn => () => { clunk(); fn(); };
 $('load').onclick  = key(() => load($('url').value.trim()));

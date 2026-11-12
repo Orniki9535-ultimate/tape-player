@@ -1,18 +1,19 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>เครื่องเล่นเทป</title>
+<title>Cassette Player</title>
 <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@700&family=Mali:wght@500;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <link href="style.css" rel="stylesheet">
 </head>
 <body>
 <div class="deck" id="deck">
-  <div class="brand"><span><i class="led"></i>STEREO CASSETTE DECK</span><span>Orniki - 9535</span></div>
+  <div class="brand"><span><i class="led"></i>STEREO CASSETTE DECK</span>
+    <span class="brand-r"><button class="lang" id="lang" data-t-aria="language"><span data-l="en">EN</span><span data-l="th">TH</span></button>Orniki - 9535</span></div>
 
-  <section class="tapeside" aria-label="เทป">
+  <section class="tapeside" data-t-aria="tapeSection">
   <div class="well out" id="well">
     <div class="empty">NO TAPE</div>
     <div class="cassette screws" id="cassette">
@@ -30,57 +31,58 @@
   </div>
 
   <div class="keys">
-    <button id="pause" aria-label="พัก" title="พัก (กดอีกครั้งเพื่อเล่นต่อ)"><i class="bi bi-pause-fill" aria-hidden="true"></i></button>
-    <button id="rew" aria-label="กรอกลับ" title="กดค้างเพื่อกรอกลับ"><i class="bi bi-rewind-fill" aria-hidden="true"></i></button>
-    <button id="play" aria-label="เล่น" title="เล่น"><i class="bi bi-play-fill" aria-hidden="true"></i></button>
-    <button id="ff" aria-label="กรอไปข้างหน้า" title="กดค้างเพื่อกรอไปข้างหน้า"><i class="bi bi-fast-forward-fill" aria-hidden="true"></i></button>
-    <button id="next" aria-label="เพลงถัดไป" title="เพลงถัดไป (เพลย์ลิสต์)"><i class="bi bi-skip-end-fill" aria-hidden="true"></i></button>
-    <button id="stop" aria-label="หยุด / ดีดเทปออก" title="หยุด — กดตอนหยุดอยู่เพื่อดีดเทปออก"><i class="bi bi-stop-fill" aria-hidden="true"></i><i class="bi bi-eject-fill" aria-hidden="true"></i></button>
-    <button id="loop" aria-label="เล่นวนซ้ำ" aria-pressed="false" title="วนซ้ำ — เล่นจบม้วนแล้วกรอกลับไปเล่นใหม่เอง"><b><i class="bi bi-arrow-repeat" aria-hidden="true"></i></b><i class="lamp"></i></button>
+    <button id="pause" data-t-aria="pause" data-t-title="pauseTip"><i class="bi bi-pause-fill" aria-hidden="true"></i></button>
+    <button id="rew" data-t-aria="rew" data-t-title="rewTip"><i class="bi bi-rewind-fill" aria-hidden="true"></i></button>
+    <button id="play" data-t-aria="play" data-t-title="play"><i class="bi bi-play-fill" aria-hidden="true"></i></button>
+    <button id="ff" data-t-aria="ff" data-t-title="ffTip"><i class="bi bi-fast-forward-fill" aria-hidden="true"></i></button>
+    <button id="next" data-t-aria="next" data-t-title="nextTip"><i class="bi bi-skip-end-fill" aria-hidden="true"></i></button>
+    <button id="stop" data-t-aria="stop" data-t-title="stopTip"><i class="bi bi-stop-fill" aria-hidden="true"></i><i class="bi bi-eject-fill" aria-hidden="true"></i></button>
+    <button id="loop" data-t-aria="loop" data-t-title="loopTip" aria-pressed="false"><b><i class="bi bi-arrow-repeat" aria-hidden="true"></i></b><i class="lamp"></i></button>
   </div>
 
   <div class="meta">
     <span class="count"><small>COUNTER</small><span class="counter" id="counter" aria-hidden="true"></span>
-      <button class="zero" id="zero" aria-label="รีเซ็ตตัวนับ" title="รีเซ็ตตัวนับ"></button></span>
+      <button class="zero" id="zero" data-t-aria="zero" data-t-title="zero"></button></span>
   </div>
   </section>
 
-  <section class="settings" aria-label="การตั้งค่า">
+  <section class="settings" data-t-aria="settingsSection">
   <div class="group">
-    <h2>ใส่เทป</h2>
+    <h2 data-t="hLoad"></h2>
     <div class="row">
-      <input type="text" id="url" aria-label="ลิงก์ YouTube" placeholder="วางลิงก์ YouTube หรือลากไฟล์เสียงมาวาง">
-      <span class="btns"><button class="load" id="load">ใส่เทป</button>
-      <button class="load" id="pick" title="เลือกไฟล์เสียงจากเครื่อง (ได้เสียงเทปยานของจริง)">ไฟล์</button></span>
+      <input type="text" id="url" data-t-aria="url" data-t-ph="urlHint">
+      <span class="btns"><button class="load" id="load" data-t="insert"></button>
+      <button class="load" id="pick" data-t="file" data-t-title="fileTip"></button></span>
       <input type="file" id="file" accept="audio/*" hidden>
     </div>
     <div class="msg" id="msg" role="status"></div>
   </div>
 
   <div class="group">
-    <h2>เสียง</h2>
+    <h2 data-t="hSound"></h2>
     <div class="sliders">
-      <label>เสียงเพลง <input type="range" id="vol" min="0" max="100" value="80"></label>
-      <label>เสียงซ่า <input type="range" id="hiss" min="0" max="100" value="35"></label>
+      <label class="has-tip"><span class="lbl"><span data-t="vol"></span> <span class="tip" aria-hidden="true">?</span><span class="tip-text" role="tooltip" id="tip-vol" data-t="tipVol"></span></span> <input type="range" id="vol" min="0" max="100" value="80" aria-describedby="tip-vol"></label>
+      <label class="has-tip"><span class="lbl"><span data-t="hiss"></span> <span class="tip" aria-hidden="true">?</span><span class="tip-text" role="tooltip" id="tip-hiss" data-t="tipHiss"></span></span> <input type="range" id="hiss" min="0" max="100" value="35" aria-describedby="tip-hiss"></label>
     </div>
   </div>
 
   <div class="group">
-    <h2>เสียงเทปเก่า <span class="tag">ไฟล์เสียงเท่านั้น</span> <button class="mini" id="ab" aria-pressed="false" disabled title="กดสลับฟังเสียงต้นฉบับ (ไม่ผ่านเอฟเฟกต์ ไม่มีเสียงซ่า) เทียบกับเสียงผ่านเครื่อง — ใช้ได้กับไฟล์เสียงเท่านั้น">ต้นฉบับ</button></h2>
+    <h2 class="has-tip tip-r"><span data-t="hOld"></span> <span class="tag" data-t="filesOnly"></span>
+      <button class="mini" id="ab" aria-pressed="false" disabled data-t="ab" aria-describedby="tip-ab"></button><span class="tip" aria-hidden="true">?</span><span class="tip-text" role="tooltip" id="tip-ab" data-t="tipAb"></span></h2>
     <div class="sliders">
-      <label title="เสียงแกว่งแบบเทปยาน — ใช้ได้กับไฟล์เสียงเท่านั้น">เทปยาน <input type="range" id="wow" min="0" max="100" value="50" disabled></label>
-      <label title="เสียงทึบ อิ่มตัว และวูบหายแบบเทปเก่า — ใช้ได้กับไฟล์เสียงเท่านั้น">ความเก่า <input type="range" id="age" min="0" max="100" value="60" disabled></label>
+      <label class="has-tip"><span class="lbl"><span data-t="wow"></span> <span class="tip" aria-hidden="true">?</span><span class="tip-text" role="tooltip" id="tip-wow" data-t="tipWow"></span></span> <input type="range" id="wow" min="0" max="100" value="50" aria-describedby="tip-wow" disabled></label>
+      <label class="has-tip"><span class="lbl"><span data-t="age"></span> <span class="tip" aria-hidden="true">?</span><span class="tip-text" role="tooltip" id="tip-age" data-t="tipAge"></span></span> <input type="range" id="age" min="0" max="100" value="60" aria-describedby="tip-age" disabled></label>
     </div>
   </div>
 
   <div class="group switches">
-    <h2>ตัวเลือก</h2>
-    <label class="switch" title="ระหว่างเล่น เทปอาจขาดได้ทุกเมื่อ — เพลงจะเงียบไปพักนึงแล้วค่อยๆ ดังกลับมาเอง"><input type="checkbox" id="snap" checked> ✂ เทปขาดแบบสุ่ม</label>
-    <label class="switch" title="ตอนวนซ้ำ ไม่ต้องรอกรอกลับ — กลับไปต้นม้วนแล้วเล่นเลย"><input type="checkbox" id="skip" disabled> ข้ามการกรอกลับ</label>
+    <h2 data-t="hOpts"></h2>
+    <label class="switch has-tip"><input type="checkbox" id="snap" checked aria-describedby="tip-snap"> <span data-t="snap"></span> <span class="tip" aria-hidden="true">?</span><span class="tip-text" role="tooltip" id="tip-snap" data-t="tipSnap"></span></label>
+    <label class="switch" data-t-title="skipTip"><input type="checkbox" id="skip" disabled> <span data-t="skip"></span></label>
   </div>
 
   <div class="group screen">
-    <h2>จอ YouTube</h2>
+    <h2 data-t="hYt"></h2>
     <div class="monitor" id="monitor"><div id="yt"></div></div>
   </div>
   </section>
@@ -91,6 +93,7 @@
 <script src="js/engine/sources.js"></script>
 <script src="js/engine/deck.js"></script>
 <!-- ui: how the deck looks, and how clicks/sliders reach the engine -->
+<script src="js/ui/i18n.js"></script>
 <script src="js/ui/view.js"></script>
 <script src="js/ui/controls.js"></script>
 </body>

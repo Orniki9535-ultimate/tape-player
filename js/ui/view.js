@@ -3,19 +3,9 @@
 
 const $ = id => document.getElementById(id);
 
-const MSG = {
-  noTape: 'ยังไม่ได้ใส่เทป',
-  notYoutube: 'ลิงก์นี้ไม่ใช่ลิงก์ YouTube นะ',
-  wait: 'รอเครื่องโหลดแป๊บนึง...',
-  endOfTape: 'สุดม้วนแล้ว กรอกลับก่อนนะ',
-  rewinding: '↻ กรอกลับไปเล่นใหม่...',
-  snapped: '✂ เทปขาด! ต่อเทปแป๊บนึงนะ...',
-  ytError: 'เปิดวิดีโอนี้ไม่ได้ (เจ้าของอาจปิดการฝัง) ลองลิงก์อื่นนะ',
-  fileError: 'เปิดไฟล์นี้ไม่ได้ ลองไฟล์เสียงอื่นนะ',
-};
-
 const view = {
-  msg: k => $('msg').textContent = k ? MSG[k] : '',
+  shown: '',   // the status message on screen, as a text key, so switching language can redraw it
+  msg(k) { view.shown = k; $('msg').textContent = k ? t(k) : ''; },
   keys(s) {   // latch the keys to match the deck state
     $('play').classList.toggle('down', s !== 'stop');
     $('pause').classList.toggle('down', s === 'pause');
