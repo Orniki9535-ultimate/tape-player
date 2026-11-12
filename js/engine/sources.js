@@ -9,15 +9,25 @@ function parse(url) {   // YouTube link -> { vid, list }
   return { list: list && list[1], vid: vid && vid[1] };
 }
 
-// ---- YouTube: its audio lives in a cross-origin iframe, so we can start, stop and seek it, nothing more ----
+// ---- YouTube: its audio lives in a cross-origin iframe, so we can start, stop and seek it, nothing more,
+// unless the Tape Deck FX browser extension (extension/) is installed: it runs the tape-tone chain inside the
+// player, and we send it the settings. Handshake: we post { tapeDeck: 'hello' }, it answers { tapeDeck: 'ready' }.
 let player, ytReady = false, ytPlaying = false;
+let ytFx = false;   // the extension answered: this player's sound can be bent
+const ytWin = () => player && player.getIframe && player.getIframe().contentWindow;
+const ytPost = m => { const w = ytWin(); if (w) w.postMessage(m, '*'); };   // nothing secret in these: any origin may read them
 let want = null;   // { list, vid }: a playlist link that points at one video inside it
-function loadYouTube(el, onState, onError) {   // el: where the player iframe goes
+function loadYouTube(el, onState, onError, onFx) {   // el: where the player iframe goes; onFx: the extension answered
+  addEventListener('message', e => {
+    if (!e.data || e.data.tapeDeck !== 'ready' || !ytWin() || e.source !== ytWin()) return;
+    if (!/^https:\/\/www\.youtube(-nocookie)?\.com$/.test(e.origin)) return;
+    ytFx = true; onFx();
+  });
   window.onYouTubeIframeAPIReady = () => {
     player = new YT.Player(el, {
       playerVars: { controls: 0, playsinline: 1, rel: 0 },
       events: {
-        onReady: () => ytReady = true,
+        onReady: () => { ytReady = true; ytPost({ tapeDeck: 'hello' }); },
         onStateChange: e => {
           if (want) {   // wait for the playlist to cue: only then can we find the linked video in it, and re-cue there
             if (e.data !== 5) return;
@@ -36,7 +46,12 @@ function loadYouTube(el, onState, onError) {   // el: where the player iframe go
 const yt = {
   preroll: PREROLL,
   ready: () => ytReady,
-  cue(vid, list) { want = list && vid ? { list, vid } : null; list ? player.cuePlaylist({ list }) : player.cueVideoById(vid); },
+  bends: () => ytFx,
+  fx: o => ytFx && ytPost({ tapeDeck: 'fx', wow: o.wow, age: o.age, bypass: o.bypass }),
+  cue(vid, list) {
+    ytPost({ tapeDeck: 'hello' });   // again on every tape: if the player page reloaded, the extension starts over
+    want = list && vid ? { list, vid } : null; list ? player.cuePlaylist({ list }) : player.cueVideoById(vid);
+  },
   video: () => player.getVideoData(),   // { title, video_id }
   lastTrack: () => { const pl = player.getPlaylist(); return !pl || player.getPlaylistIndex() >= pl.length - 1; },
   play: () => player.playVideo(), pause: () => player.pauseVideo(), eject: () => player.stopVideo(),
@@ -55,7 +70,7 @@ function initFx(o) {   // o: { wow, age, bypass }
 }
 const motorRate = sp => sp > 0.98 ? 1 : Math.max(0.1, sp);
 const file = {
-  preroll: 0, v: 1, stopping: false,   // no pre-roll: the music itself winds up to speed with the motor
+  preroll: 0, v: 1, stopping: false, bends: () => true,   // no pre-roll: the music itself winds up to speed with the motor
   load(f) { audio.src = URL.createObjectURL(f); },
   play() { this.stopping = false; fx.out.gain.value = this.v; audio.playbackRate = motorRate(speed); audio.play(); },
   pause() { this.stopping = true; },   // keep playing while the motor coasts down; motor() does the real pause

@@ -23,7 +23,7 @@ let speed = 0;               // motor speed: 1 = playing, ±5 = winding
 let swapT = 0, swapping = false;
 
 const hissOn = () => hissTo(opts.bypass ? 0 : opts.hiss * 0.12);
-const tune = () => fx && setFx(fx, opts);
+const tune = () => { if (fx) setFx(fx, opts); yt.fx(opts); };
 const noTape = () => view.msg('noTape');
 
 function setOpt(k, v) {   // the UI changed a setting
@@ -51,6 +51,11 @@ function ytEvent(s) {
   if (s === 0 && yt.lastTrack()) ended();
 }
 const ytError = () => { show('stop'); view.msg('ytError'); };
+const ytFxReady = () => {   // the FX extension answered (again, if the player page reloaded): hand it the settings
+  view.extension();
+  if (src === yt && loaded) view.bends(true);
+  tune();
+};
 audio.onended = () => { if (!wind && loaded) ended(); };
 audio.onerror = () => { if (loaded && src === file) { show('stop'); view.msg('fileError'); } };
 
@@ -115,7 +120,7 @@ function insert(next, cue) {   // cue only: a tape doesn't play until you press 
   if (loaded) src.eject();
   loaded = false; view.well(true);
   setTimeout(() => {
-    src = next; view.title(curTitle = ''); view.stripes(null); opts.bypass = false; tune(); view.source(src === file); view.screen(src === yt);
+    src = next; view.title(curTitle = ''); view.stripes(null); opts.bypass = false; tune(); view.source(src.bends()); view.screen(src === yt);
     cue(); src.vol(opts.vol);
     snapAt = 0; calm = 0; view.broken(false);   // a fresh tape (the snapped one leaves with its strand showing)
     pos = zero = 0; loaded = true; view.well(false); setTimeout(clunk, 400);
