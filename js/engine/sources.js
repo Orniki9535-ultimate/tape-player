@@ -1,5 +1,5 @@
 // ENGINE · sources: where the music comes from. Both sources give the deck the same interface:
-//   play pause eject wind seek vol next first time dur playing   (+ motor, for files)
+//   play pause eject wind seek vol next prev first time dur playing   (+ motor, for files)
 
 const PREROLL = 400;   // ms between the PLAY key landing and music starting
 
@@ -59,7 +59,7 @@ const yt = {
   wind(dir, rate) {   // with the extension both squeal like a file's: FF runs the video fast, REW plays what was heard backwards
     ytRate(dir * rate); ytFx && dir > 0 ? player.playVideo() : player.pauseVideo();
   },
-  next: () => player.nextVideo(), vol: v => player.setVolume(v),
+  next: () => player.nextVideo(), prev: () => player.previousVideo(), vol: v => player.setVolume(v),
   first: () => (player.getPlaylist() || []).length > 1 && player.playVideoAt(0),   // LOOP replays a playlist from track 1
   seek(t, go) { ytRate(0); player.seekTo(t, true); go ? player.playVideo() : player.pauseVideo(); },   // seekTo can start playback on its own
   time: () => player.getCurrentTime() || 0, dur: () => player.getDuration() || 0, playing: () => ytPlaying,
@@ -108,7 +108,7 @@ const file = {
   seek(t, go) { unwind(); audio.currentTime = t; go ? this.play() : audio.pause(); },
   eject() { unwind(); audio.pause(); URL.revokeObjectURL(audio.src); audio.removeAttribute('src'); },
   vol(v) { this.v = v / 100; if (fx) fx.out.gain.value = this.v; },
-  next() {}, first() {}, time: () => audio.currentTime, dur: () => audio.duration || 0, playing: () => false,
+  next() {}, prev() {}, first() {}, time: () => audio.currentTime, dur: () => audio.duration || 0, playing: () => false,
 };
 
 // self-check: link parsing

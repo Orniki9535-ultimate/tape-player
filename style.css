@@ -80,7 +80,7 @@ button.mini[aria-pressed=true] { transform:translateY(2px); box-shadow:0 1px 0 #
 .row #url { flex:10 1 200px; } .btns { flex:1 0 auto; display:flex; gap:10px; } .btns .load { flex:1; }   /* both buttons drop under the link together on narrow screens */
 input[type=text] { flex:1; min-width:0; padding:10px 12px; border-radius:8px; border:0; background:#1b1714; color:var(--cream);
                    font-family:'Courier Prime'; box-shadow:inset 0 2px 6px #000; }
-.keys { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-top:16px; }
+.keys { display:grid; grid-template-columns:repeat(8,1fr); gap:6px; margin-top:16px; }
 button { font:inherit; cursor:pointer; border:0; border-radius:6px; padding:12px 0; color:#222; font-weight:700; touch-action:none;
          background:linear-gradient(#ddd,#a9a9a9); box-shadow:0 5px 0 #555, 0 6px 8px #0008; transition:transform .05s, box-shadow .05s; }
 button:active, button.down { transform:translateY(4px); box-shadow:0 1px 0 #555, inset 0 3px 6px #0007; filter:brightness(.85); }   /* latched keys sit low and in shadow */

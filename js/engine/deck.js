@@ -101,6 +101,7 @@ function stop() {   // STOP/EJECT is one key, like a real deck
   loaded = false; src.eject(); view.well(true); view.screen(false); view.msg('');
 }
 const nextTrack = () => loaded ? src.next() : noTape();
+const prevTrack = () => loaded ? src.prev() : noTape();
 const resetCounter = () => zero = pos;
 function swapTape(title, id) {   // playlist's next track: the old tape slides out, the new one goes in, then play on
   const resume = state === 'play';

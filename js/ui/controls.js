@@ -37,6 +37,7 @@ $('url').onkeydown = e => { if (e.key === 'Enter') $('load').click(); };   // br
 $('play').onclick  = key(play);
 $('pause').onclick = key(pause);
 $('stop').onclick  = key(stop);
+$('prev').onclick  = key(prevTrack);
 $('next').onclick  = key(nextTrack);
 $('loop').onclick  = key(() => { setLoop(!opts.loop); save('loop', opts.loop); });
 $('zero').onclick  = key(resetCounter);
