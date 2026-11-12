@@ -56,4 +56,4 @@ deck.ondragover = e => { e.preventDefault(); deck.classList.add('drop'); };
 deck.ondragleave = () => deck.classList.remove('drop');
 deck.ondrop = e => { e.preventDefault(); deck.classList.remove('drop'); clunk(); loadFile(e.dataTransfer.files[0]); };
 
-loadYouTube($('yt'), ytEvent, ytError);
+loadYouTube($('yt'), ytEvent, ytError, ytFxReady);

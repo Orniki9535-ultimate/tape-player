@@ -21,10 +21,11 @@ const view = {
   title: setTitle,
   stripes: tint,
   screen: on => $('tv').classList.toggle('off', !on),   // the YouTube TV, only while a YouTube tape is in
-  source(isFile) {   // a new tape went in
-    for (const id of ['wow', 'age', 'ab']) $(id).disabled = !isFile;    // sound-bending controls are file-only
-    $('ab').setAttribute('aria-pressed', false);
+  source(bends) {   // a new tape went in; bends: we can change its sound (files, or YouTube with the extension)
+    view.bends(bends); $('ab').setAttribute('aria-pressed', false);
   },
+  bends: on => { for (const id of ['wow', 'age', 'ab']) $(id).disabled = !on; },
+  extension() { const el = $('fxTag'); el.dataset.t = 'fxExt'; el.textContent = t('fxExt'); },   // the FX extension is on
 };
 
 function setTitle(t) {

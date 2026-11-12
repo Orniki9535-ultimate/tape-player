@@ -68,7 +68,7 @@
   </div>
 
   <div class="group">
-    <h2 class="has-tip tip-r"><span data-t="hOld"></span> <span class="tag" data-t="filesOnly"></span>
+    <h2 class="has-tip tip-r"><span data-t="hOld"></span> <span class="tag" id="fxTag" data-t="filesOnly"></span>
       <button class="mini" id="ab" aria-pressed="false" disabled data-t="ab" aria-describedby="tip-ab"></button><span class="tip" aria-hidden="true">?</span><span class="tip-text" role="tooltip" id="tip-ab" data-t="tipAb"></span></h2>
     <div class="sliders">
       <label class="has-tip"><span class="lbl"><span data-t="wow"></span> <span class="tip" aria-hidden="true">?</span><span class="tip-text" role="tooltip" id="tip-wow" data-t="tipWow"></span></span> <input type="range" id="wow" min="0" max="100" value="50" aria-describedby="tip-wow" disabled></label>
@@ -91,6 +91,7 @@
 
 <!-- engine: sound, music sources and the deck mechanism (never touches the page) -->
 <script src="js/engine/sound.js"></script>
+<script src="js/engine/fx.js"></script>
 <script src="js/engine/sources.js"></script>
 <script src="js/engine/deck.js"></script>
 <!-- ui: how the deck looks, and how clicks/sliders reach the engine -->
