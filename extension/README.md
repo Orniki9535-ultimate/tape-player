@@ -1,76 +1,81 @@
 # Tape Deck FX
 
-extension เล็กๆ ที่ทำให้เสียงเทปเก่าในแอป [Tape Deck](https://orniki9535-ultimate.github.io/tape-player/)
-(แถบ "เทปยาน", "ความเก่า" และปุ่ม "ต้นฉบับ") ใช้กับเพลง YouTube ได้ ไม่ใช่แค่ไฟล์เสียง
+A small browser extension that lets the old-tape sound in the [Tape Deck](https://orniki9535-ultimate.github.io/tape-player/)
+app (the **Wow & flutter** and **Tape age** sliders, and the **Original** button) work on YouTube songs, not just audio files.
 
-- ทำงาน**เฉพาะ**กับ YouTube ที่เล่นอยู่ในแอป Tape Deck เว็บอื่นและ youtube.com ปกติไม่โดนแตะ
-- ไม่เก็บและไม่ส่งข้อมูลอะไรออกไป เสียงถูกปรับในเบราว์เซอร์ของคุณเท่านั้น
-- เสียงโฆษณาใน YouTube จะโดนเอฟเฟกต์ไปด้วย
-- ตอนกรอกลับจะได้ยินเสียงเฉพาะช่วงที่เล่นฟังไปแล้ว (ช่วงที่ยังไม่เคยเล่นจะเงียบ)
-- ใช้ได้บนคอมพิวเตอร์: Chrome, Edge, Opera / Opera GX, Firefox (มือถือและไอแพดใช้ไม่ได้)
+- It **only** touches YouTube playing inside the Tape Deck app. Other sites and regular youtube.com are left alone.
+- It collects and sends nothing. The sound is changed only in your own browser.
+- YouTube ads get the effect too.
+- When rewinding, you only hear the parts you have already played (parts not played yet stay silent).
+- Works on desktop: Chrome, Edge, Opera / Opera GX, Firefox (not on phones or iPads).
 
-ติดตั้งแล้ว ป้ายข้างหัวข้อ "เสียงเทปเก่า" ในแอปจะเปลี่ยนเป็น **"ไฟล์ + YouTube (เปิด extension แล้ว)"** ตอนใส่เทป YouTube
+Once installed, the badge next to the **Old-tape sound** heading in the app changes to
+**"Files + YouTube (extension on)"** when a YouTube tape is in.
 
-## ติดตั้ง
+## Install
 
 ### Chrome, Edge, Opera / Opera GX
-1. ขอไฟล์ `tape-deck-fx-<เวอร์ชัน>.zip` แล้วแตกไฟล์ไว้ในโฟลเดอร์ที่จะไม่ลบทิ้ง (เบราว์เซอร์ใช้โฟลเดอร์นี้ตลอด)
-2. เปิดหน้า extension: `chrome://extensions` / `edge://extensions` / `opera://extensions`
-3. เปิด **Developer mode** → กด **Load unpacked** → เลือกโฟลเดอร์ที่แตกไว้
-4. รีเฟรชหน้าแอป
+1. Get the `tape-deck-fx-<version>.zip` file and unzip it into a folder you won't delete (the browser keeps using it).
+2. Open the extensions page: `chrome://extensions` / `edge://extensions` / `opera://extensions`
+3. Turn on **Developer mode** → click **Load unpacked** → pick the unzipped folder.
+4. Refresh the app page.
 
-Chrome อาจเตือนเรื่อง developer mode ตอนเปิดเบราว์เซอร์ กดปิดคำเตือนได้เลย
+Chrome may warn about developer mode when it starts. You can just close the warning.
 
 ### Firefox
-1. ขอไฟล์ `tape-deck-fx-<เวอร์ชัน>.xpi` (ไฟล์ที่ Mozilla sign แล้ว)
-2. ลากไฟล์ใส่หน้าต่าง Firefox หรือ `about:addons` → ⚙️ → **Install Add-on From File…** → กด Add
-3. ถ้าไม่ทำงาน: `about:addons` → Tape Deck FX → แท็บ Permissions → เปิดสิทธิ์ของ youtube.com
-4. รีเฟรชหน้าแอป
+1. Get the `tape-deck-fx-<version>.xpi` file (the one signed by Mozilla).
+2. Drag it into a Firefox window, or `about:addons` → ⚙️ → **Install Add-on From File…** → click **Add**.
+3. If it doesn't work: `about:addons` → Tape Deck FX → **Permissions** tab → allow youtube.com.
+4. Refresh the app page.
 
-ต้องใช้ Firefox 140 ขึ้นไป
+Needs Firefox 140 or newer.
 
-## อัปเดตเป็นเวอร์ชันใหม่
-- **Chrome / Edge / Opera:** แตกไฟล์ zip ใหม่ทับโฟลเดอร์เดิม แล้วกดปุ่มรีโหลด (⟳) บนการ์ด Tape Deck FX
-- **Firefox:** ติดตั้งไฟล์ .xpi ใหม่ทับได้เลย
+## Updating to a new version
+- **Chrome / Edge / Opera:** unzip the new zip over the old folder, then click the reload button (⟳) on the Tape Deck FX card.
+- **Firefox:** just install the new .xpi over the old one.
 
-## ใช้ไม่ได้?
-- รีเฟรชหน้าแอป (Ctrl+F5) หลังติดตั้งหรืออัปเดตทุกครั้ง
-- กด F12 → Console พิมพ์ `tapeDeck` ในช่องกรอง ถ้าทำงานจะเห็นบรรทัด `[tapeDeck] connected to ...`
-  ส่งบรรทัดที่เห็นให้คนดูแลได้เลย
-- ไม่มี extension ก็ใช้แอปได้ตามปกติ แค่เอฟเฟกต์เทปจะใช้ได้กับไฟล์เสียงอย่างเดียว
+## Not working?
+- Refresh the app page (Ctrl+F5) after every install or update.
+- Press F12 → Console and type `tapeDeck` in the filter box. If it works you'll see a line like `[tapeDeck] connected to ...`.
+  Send whatever lines you see to the maintainer.
+- Without the extension the app still works as normal; the tape effects just work on audio files only.
 
 ---
 
-## สำหรับคนดูแล
+## For maintainers
 
-| ไฟล์ | คืออะไร |
+| File | What it is |
 | --- | --- |
-| `manifest.json` | Manifest V3 ไฟล์เดียวใช้ได้ทั้ง Chromium และ Firefox |
-| `content.js` | รันใน YouTube embed: ทักทายกับแอป แล้วต่อ `<video>` เข้า FX chain |
-| `fx.js` | **สำเนา** ของ `js/engine/fx.js` ห้ามแก้ตรงนี้ |
-| `sync.sh` | copy `js/engine/fx.js` มาเป็น `fx.js` (`--check` แค่บอกว่าสำเนาตรงกันมั้ย) |
-| `pack.sh` | สร้าง `dist/tape-deck-fx-<version>.zip` (เช็กสำเนา fx.js ก่อน) |
+| `manifest.json` | Manifest V3; one file works for both Chromium and Firefox |
+| `content.js` | Runs in the YouTube embed: says hello to the app, then wires `<video>` into the FX chain |
+| `fx.js` | A **copy** of `js/engine/fx.js`. Don't edit it here |
+| `sync.sh` | Copies `js/engine/fx.js` to `fx.js` (`--check` only reports whether the copy matches) |
+| `pack.sh` | Builds `dist/tape-deck-fx-<version>.zip` (checks the fx.js copy first) |
 
-ข้อความระหว่างแอปกับ extension (`postMessage` ทั้งสองฝั่งเช็ก origin และ source):
+Messages between the app and the extension (`postMessage`; both sides check origin and source):
 
 ```
-แอป → extension  { tapeDeck: 'hello' }                  ตอน player พร้อม และทุกครั้งที่ใส่เทป
-extension → แอป  { tapeDeck: 'ready' }
-แอป → extension  { tapeDeck: 'fx', wow, age, bypass }   ทุกครั้งที่ปรับ (wow, age: 0..1)
-แอป → extension  { tapeDeck: 'wind', rate }             ตอนกรอ: + ไปข้างหน้า (สูงสุด 16), - กรอกลับ, 0 หยุดกรอ
+app → extension  { tapeDeck: 'hello' }                  when the player is ready, and every time a tape goes in
+extension → app  { tapeDeck: 'ready' }
+app → extension  { tapeDeck: 'fx', wow, age, bypass }   on every change (wow, age: 0..1)
+app → extension  { tapeDeck: 'wind', rate }             while winding: + forward (up to 16), - rewind, 0 stop winding
 ```
 
-ถ้าย้ายแอปไปที่อยู่อื่น ต้องแก้รายชื่อ `APP` ใน `content.js`
+If the app moves to another address, update the `APP` list in `content.js`.
 
-### ออกเวอร์ชันใหม่
-1. แก้ `js/engine/fx.js` แล้ว `sh extension/sync.sh` (ถ้าแก้ FX chain)
-2. เพิ่ม `version` ใน `manifest.json`
-3. `sh extension/pack.sh` ได้ไฟล์ zip ใน `dist/` (ไม่ได้ commit)
-4. ตรวจกับตัวตรวจของ Firefox (ไม่บังคับ): `npx web-ext lint --source-dir extension --ignore-files sync.sh pack.sh '*.md'`
+### Releasing a new version
+1. Edit `js/engine/fx.js`, then run `sh extension/sync.sh` (if you changed the FX chain).
+2. Bump `version` in `manifest.json`.
+3. Run `sh extension/pack.sh` to get the zip in `dist/` (not committed).
+4. Check it with Firefox's linter (optional): `npx web-ext lint --source-dir extension --ignore-files sync.sh pack.sh '*.md'`
 
-### sign สำหรับ Firefox (ฟรี ไม่ขึ้นหน้าร้าน)
-1. ล็อกอินที่ https://addons.mozilla.org/developers/ → **Submit a New Add-on**
-2. เลือก **On your own** (self-distribution / unlisted) → อัปโหลดไฟล์ zip จาก `pack.sh`
-3. ถ้าถามเรื่อง source code: ไม่ต้องส่ง (โค้ดไม่ได้ผ่าน build หรือย่อขนาด)
-4. รอระบบตรวจอัตโนมัติ (ปกติไม่กี่นาที) แล้วดาวน์โหลดไฟล์ `.xpi` ที่ sign แล้วไปแจก
-5. เวอร์ชันถัดไปอัปโหลดในหน้า add-on เดิม (**Upload New Version**) ต้องเพิ่ม `version` ทุกครั้ง
+### Signing for Firefox (free, not listed in the store)
+1. Log in at https://addons.mozilla.org/developers/ → **Submit a New Add-on**.
+2. Choose **On your own** (self-distribution / unlisted) → upload the zip from `pack.sh`.
+3. If it asks for source code: not needed (the code isn't built or minified).
+4. Wait for the automatic review (usually a few minutes), then download the signed `.xpi` and share it.
+5. Upload later versions on the same add-on page (**Upload New Version**). Bump `version` every time.
+
+## Credits
+
+Made 100% by Claude (an AI by Anthropic). If there are any mistakes, I sincerely apologize.
