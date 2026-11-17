@@ -175,3 +175,21 @@ html[lang=en] .lang [data-l=en], html[lang=th] .lang [data-l=th] { background:li
   .deck { grid-template-columns:minmax(0,1fr); padding:16px; }
   .settings { margin-top:18px; }
 }
+/* tour: the page goes dark except a spotlight on one control; a bubble with a bouncing arrow explains it */
+.help { width:22px; height:22px; padding:0; border-radius:50%; font:700 12px 'Courier Prime'; box-shadow:0 2px 0 #555; }
+.tour { position:fixed; inset:0; z-index:100; }   /* also swallows clicks, so the page can't be used mid-tour */
+.spot { position:absolute; border-radius:10px; box-shadow:0 0 0 200vmax #000c, 0 0 0 3px var(--mustard), 0 0 24px 6px #d9a93a88;
+        transition:all .35s ease; pointer-events:none; }
+.bubble { position:fixed; width:min(300px, calc(100vw - 32px)); padding:14px 16px 12px; border-radius:12px;
+          background:var(--cream); color:#2b2622; box-shadow:0 10px 30px #000a; transition:left .35s, top .35s; }
+.bubble p { margin:0 0 12px; font-size:14px; line-height:1.5; }
+.arrow { position:absolute; left:var(--ax); top:-38px; translate:-50% 0; font-size:30px; color:var(--mustard); text-shadow:0 2px 6px #000;
+         animation:point .8s ease-in-out infinite alternate; }
+.up .arrow { top:auto; bottom:-38px; rotate:180deg; }
+@keyframes point { to { transform:translateY(-8px); } }
+.tour-nav { display:flex; align-items:center; gap:8px; }
+.tour-nav small { margin-right:auto; color:#8f846f; font-family:'Courier Prime'; }
+.tour-nav button { padding:6px 14px; box-shadow:0 3px 0 #555; }
+.tour-nav .go { background:linear-gradient(var(--mustard),#b4851f); }
+.tour-nav .skip { background:none; box-shadow:none; color:#8f846f; }
+@media (prefers-reduced-motion: reduce) { .spot, .bubble { transition:none; } .arrow { animation:none; } }
