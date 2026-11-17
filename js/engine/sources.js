@@ -23,7 +23,7 @@ const ytPost = m => { const w = ytWin(); if (w) w.postMessage(m, '*'); };   // n
 const ytRate = r => ytFx && ytPost({ tapeDeck: 'wind', rate: r });   // for the extension: + fast-forward, - rewind, 0 normal
 let want = null;  // { vid }: a playlist link being cued (vid: the video it points at, if any)
 // el: where the player iframe goes; onFx: the extension answered; onTracks: a playlist's videos, from the linked one on
-function loadYouTube(el, onState, onError, onFx, onTracks) {
+function loadYouTube(el, onState, onError, onFx, onTracks, onReady) {
   addEventListener('message', e => {
     if (!e.data || e.data.tapeDeck !== 'ready' || !ytWin() || e.source !== ytWin()) return;
     if (!/^https:\/\/www\.youtube(-nocookie)?\.com$/.test(e.origin)) return;
@@ -33,7 +33,7 @@ function loadYouTube(el, onState, onError, onFx, onTracks) {
     player = new YT.Player(el, {
       playerVars: { controls: 0, playsinline: 1, rel: 0 },
       events: {
-        onReady: () => { ytReady = true; ytPost({ tapeDeck: 'hello' }); },
+        onReady: () => { ytReady = true; ytPost({ tapeDeck: 'hello' }); onReady(); },
         onStateChange: e => {
           if (want) {   // a playlist: once it cues we can read its videos. Each becomes its own tape (they go in the queue),
             if (e.data !== 5) return;   // and the deck never sees the playlist itself
@@ -57,9 +57,9 @@ const yt = {
   ready: () => ytReady,
   bends: () => ytFx,
   fx: o => ytFx && ytPost({ tapeDeck: 'fx', wow: o.wow, age: o.age, bypass: o.bypass }),
-  cue({ vid, list }) {
+  cue({ vid, list }, start = 0) {   // start: s into the video (a playlist starts at its top)
     ytPost({ tapeDeck: 'hello' });   // again on every tape: if the player page reloaded, the extension starts over
-    want = list ? { vid } : null; list ? player.cuePlaylist({ list }) : player.cueVideoById(vid);
+    want = list ? { vid } : null; list ? player.cuePlaylist({ list }) : player.cueVideoById(vid, start);
   },
   video: () => player.getVideoData(),   // { title, video_id }
   play: () => player.playVideo(), pause: () => player.pauseVideo(), eject: () => { ytRate(0); player.stopVideo(); },

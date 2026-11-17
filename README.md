@@ -12,6 +12,8 @@ A web cassette deck that plays YouTube links or your own audio files, with the f
 - Spinning reels, a tape counter, and a door that opens when a tape goes in or out
 - YouTube links (videos and playlists) or audio files from your device (pick or drag & drop)
 - Old-tape sound: wow & flutter, tape age, tape hiss, random tape snaps, and an "Original" button to compare
+- Keyboard keys (Space play / pause, hold ← → to wind, N next) and the phone's lock screen / headphone buttons
+- Remembers your tape and queue: close the tab, come back, and it's cued where you left off (YouTube links)
 - A guided tour on the first visit (press ? to see it again)
 - English and Thai interface
 
