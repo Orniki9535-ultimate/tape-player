@@ -4,6 +4,11 @@
 const TEXT = {
   en: {
     title: 'Cassette Player', language: 'Language',
+    help: 'How to use (tour)', tourNext: 'Next', tourDone: 'Got it!', tourSkip: 'Skip',
+    tourUrl: 'Paste a YouTube link (a video or a playlist) here and press Insert. Links you add while one plays wait in the queue.',
+    tourZero: 'The tape counter. Press the little button to set it back to 000.',
+    tourSound: 'Tune the sound here. Not sure what something does? Tap the ? next to it.',
+    tourHelp: 'Press ? any time to see this tour again.',
     tapeSection: 'Tape', settingsSection: 'Settings',
     pause: 'Pause', pauseTip: 'Pause (press again to resume)',
     rew: 'Rewind', rewTip: 'Hold to rewind',
@@ -40,6 +45,11 @@ const TEXT = {
   },
   th: {
     title: 'เครื่องเล่นเทป', language: 'ภาษา',
+    help: 'วิธีใช้ (ทัวร์)', tourNext: 'ต่อไป', tourDone: 'เข้าใจแล้ว!', tourSkip: 'ข้าม',
+    tourUrl: 'วางลิงก์ YouTube (วิดีโอหรือเพลย์ลิสต์) ตรงนี้ แล้วกด "ใส่เทป" ถ้าใส่ลิงก์เพิ่มตอนกำลังเล่น จะต่อคิวไว้ให้',
+    tourZero: 'ตัวนับเทป กดปุ่มเล็กๆ นี้เพื่อรีเซ็ตกลับเป็น 000',
+    tourSound: 'ปรับเสียงได้ตรงนี้ ไม่แน่ใจว่าอันไหนทำอะไร กด ? ข้างๆ ดูได้เลย',
+    tourHelp: 'กด ? เมื่อไหร่ก็ได้ เพื่อดูทัวร์นี้อีกครั้ง',
     tapeSection: 'เทป', settingsSection: 'การตั้งค่า',
     pause: 'พัก', pauseTip: 'พัก (กดอีกครั้งเพื่อเล่นต่อ)',
     rew: 'กรอกลับ', rewTip: 'กดค้างเพื่อกรอกลับ',
