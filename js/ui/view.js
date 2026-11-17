@@ -31,6 +31,15 @@ const view = {
     view.bends(bends); $('ab').setAttribute('aria-pressed', false);
   },
   bends: on => { for (const id of ['wow', 'age', 'ab']) $(id).disabled = !on; },
+  queue(q) {   // the tapes waiting their turn
+    const ol = $('queue'); ol.replaceChildren(); $('queueBox').hidden = !q.length;
+    q.forEach((l, i) => {
+      const li = document.createElement('li'), x = document.createElement('button');
+      li.append(l.title || l.url, x); li.title = l.url;
+      x.textContent = '×'; x.setAttribute('aria-label', t('unqueue')); x.onclick = () => unqueue(i);
+      ol.append(li);
+    });
+  },
   extension() { const el = $('fxTag'); el.dataset.t = 'fxExt'; el.textContent = t('fxExt'); },   // the FX extension is on
 };
 

@@ -21,6 +21,7 @@ let autoRew = false;         // LOOP is rewinding the tape by itself, to play it
 let pos = 0, zero = 0;       // tape position (s) as shown by reels + counter; counter zero point
 let speed = 0;               // motor speed: 1 = playing, ±5 = winding
 let swapT = 0, swapping = false;
+const queue = [];            // tapes waiting their turn ({ vid, list, url, title }), like a chat music bot's queue
 
 const hissOn = () => hissTo(opts.bypass ? 0 : opts.hiss * 0.12);
 const tune = () => { if (fx) setFx(fx, opts); yt.fx(opts); };
@@ -64,8 +65,9 @@ function show(s) {   // latch the keys to match the deck state
   state = s; view.keys(s);
   s === 'play' ? hissOn() : hissOff();
 }
-function ended() {   // end of tape: auto-stop, and with LOOP on, rewind by itself and play again
+function ended() {   // end of tape: auto-stop; then the next queued tape, or with LOOP on, rewind and play it again
   show('stop'); clunk();
+  if (!opts.loop && queue.length) return setTimeout(() => { if (state === 'stop' && loaded && !wind) advance(); }, 600);
   if (opts.loop) setTimeout(() => {
     if (state !== 'stop' || !loaded || wind || !opts.loop) return;
     autoRew = true; windStart(-1); view.msg('rewinding');
@@ -100,7 +102,18 @@ function stop() {   // STOP/EJECT is one key, like a real deck
   if (!loaded) return;
   loaded = false; src.eject(); view.well(true); view.screen(false); view.msg('');
 }
-const nextTrack = () => loaded ? src.next() : noTape();
+const nextTrack = () => !loaded ? noTape() : queue.length && src.lastTrack() ? advance() : src.next();
+function advance() {   // the next tape from the queue goes in and plays
+  const l = queue.shift(); view.queue(queue);
+  if (wind) windEnd();
+  insert(yt, () => yt.cue(l));
+  setTimeout(() => { if (loaded && src === yt && state === 'stop') play(); }, 1100);   // once it's in (insert: 450 + 600 ms)
+}
+function enqueue(l) {
+  queue.push(l); view.queue(queue);
+  ytTitle(l.url).then(t => { l.title = t; view.queue(queue); }, () => {});   // no title: the list shows the link
+}
+const unqueue = i => { queue.splice(i, 1); view.queue(queue); };
 const resetCounter = () => zero = pos;
 function swapTape(title, id) {   // playlist's next track: the old tape slides out, the new one goes in, then play on
   const resume = state === 'play';
@@ -126,11 +139,14 @@ function insert(next, cue) {   // cue only: a tape doesn't play until you press 
     pos = zero = 0; loaded = true; view.well(false); setTimeout(clunk, 600);
   }, wait);
 }
-function load(url) {   // a YouTube link
-  const { vid, list } = parse(url);
-  if (!list && !vid) return view.msg('notYoutube');
+function load(text) {   // YouTube link(s): while music is on they join the queue, otherwise the first goes in now
+  const ls = links(text);
+  if (!ls.length) return view.msg('notYoutube');
   if (!yt.ready()) return view.msg('wait');
-  insert(yt, () => yt.cue(vid, list));
+  if (!loaded || state === 'stop') { const l = ls.shift(); insert(yt, () => yt.cue(l)); }
+  else view.msg('queued');
+  ls.forEach(enqueue);
+  return true;
 }
 function loadFile(f) {
   if (!f) return;
