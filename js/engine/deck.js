@@ -127,10 +127,10 @@ function insert(next, cue) {   // cue only: a tape doesn't play until you press 
   }, wait);
 }
 function load(url) {   // a YouTube link
-  const { vid, list } = parse(url);
-  if (!list && !vid) return view.msg('notYoutube');
+  const link = parse(url);
+  if (!link.list && !link.vid) return view.msg('notYoutube');
   if (!yt.ready()) return view.msg('wait');
-  insert(yt, () => yt.cue(vid, list));
+  insert(yt, () => yt.cue(link));
 }
 function loadFile(f) {
   if (!f) return;

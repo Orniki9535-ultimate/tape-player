@@ -8,7 +8,7 @@ A web cassette deck that plays YouTube links or your own audio files, with the f
 
 - Real deck keys: play, pause, stop / eject, hold to rewind or fast-forward, next track, loop
 - Spinning reels, a tape counter, and a door that opens when a tape goes in or out
-- YouTube links (videos and playlists) or audio files from your device (pick or drag & drop)
+- YouTube links (videos, playlists, or several links pasted together as a queue) or audio files from your device (pick or drag & drop)
 - Old-tape sound: wow & flutter, tape age, tape hiss, random tape snaps, and an "Original" button to compare
 - English and Thai interface
 

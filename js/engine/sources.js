@@ -3,10 +3,11 @@
 
 const PREROLL = 400;   // ms between the PLAY key landing and music starting
 
-function parse(url) {   // YouTube link -> { vid, list }
-  const list = url.match(/[?&]list=([\w-]+)/);
-  const vid = url.match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-]{11})/) || url.match(/^([\w-]{11})$/);
-  return { list: list && list[1], vid: vid && vid[1] };
+function parse(url) {   // YouTube link(s) -> { vid, list, vids }; several links = a queue, played as one playlist
+  const vids = [...url.matchAll(/(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-]{11})/g)].map(m => m[1]);
+  if (!vids.length && /^[\w-]{11}$/.test(url)) vids.push(url);
+  const list = vids.length < 2 && url.match(/[?&]list=([\w-]+)/);   // in a queue each link is just its video
+  return { list: list ? list[1] : null, vid: vids[0] || null, vids };
 }
 
 // ---- YouTube: its audio lives in a cross-origin iframe, so we can start, stop and seek it, nothing more,
@@ -49,9 +50,10 @@ const yt = {
   ready: () => ytReady,
   bends: () => ytFx,
   fx: o => ytFx && ytPost({ tapeDeck: 'fx', wow: o.wow, age: o.age, bypass: o.bypass }),
-  cue(vid, list) {
+  cue({ vid, list, vids }) {
     ytPost({ tapeDeck: 'hello' });   // again on every tape: if the player page reloaded, the extension starts over
-    want = list && vid ? { list, vid } : null; list ? player.cuePlaylist({ list }) : player.cueVideoById(vid);
+    want = list && vid ? { list, vid } : null;
+    vids.length > 1 ? player.cuePlaylist(vids) : list ? player.cuePlaylist({ list }) : player.cueVideoById(vid);
   },
   video: () => player.getVideoData(),   // { title, video_id }
   lastTrack: () => { const pl = player.getPlaylist(); return !pl || player.getPlaylistIndex() >= pl.length - 1; },
@@ -118,4 +120,8 @@ for (const [url, vid, list] of [
   ['https://www.youtube.com/playlist?list=PL_abc-123', null, 'PL_abc-123'],
   ['https://www.youtube.com/shorts/jNQXAC9IVRw', 'jNQXAC9IVRw', null],
   ['hello', null, null],
+  ['jNQXAC9IVRw', 'jNQXAC9IVRw', null],
 ]) { const r = parse(url); console.assert(r.vid === vid && r.list === list, 'parse', url, r); }
+// a queue: links pasted together (a text box strips the newlines, so they arrive glued) -> every video, no list
+console.assert(parse('https://youtu.be/jNQXAC9IVRwhttps://www.youtube.com/watch?v=dQw4w9WgXcQ&list=PL_x')
+  .vids.join() === 'jNQXAC9IVRw,dQw4w9WgXcQ' && parse('https://youtu.be/jNQXAC9IVRw https://youtu.be/dQw4w9WgXcQ').list === null, 'queue');
