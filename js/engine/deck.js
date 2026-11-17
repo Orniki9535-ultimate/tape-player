@@ -114,6 +114,7 @@ function enqueue(l) {
   ytTitle(l.url).then(t => { l.title = t; view.queue(queue); }, () => {});   // no title: the list shows the link
 }
 const unqueue = i => { queue.splice(i, 1); view.queue(queue); };
+const requeue = (from, to) => { queue.splice(to, 0, ...queue.splice(from, 1)); view.queue(queue); };   // reorder
 const resetCounter = () => zero = pos;
 function swapTape(title, id) {   // playlist's next track: the old tape slides out, the new one goes in, then play on
   const resume = state === 'play';
