@@ -16,7 +16,7 @@ document.body.append(tour);
 const [spot, bubble] = tour.children, go = tour.querySelector('.go');
 let step = 0;
 
-function place() {   // light the target, then put the bubble on whichever side has more room
+function tourPlace() {   // light the target, then put the bubble on whichever side has more room
   const r = document.querySelector(STEPS[step][0]).getBoundingClientRect(), pad = 6;
   Object.assign(spot.style, { left: r.left - pad + 'px', top: r.top - pad + 'px', width: r.width + 2 * pad + 'px', height: r.height + 2 * pad + 'px' });
   const w = bubble.offsetWidth, h = bubble.offsetHeight, gap = 44, below = innerHeight - r.bottom > r.top;
@@ -26,7 +26,7 @@ function place() {   // light the target, then put the bubble on whichever side 
   bubble.style.cssText = `left:${x}px; top:${y}px; --ax:${Math.min(Math.max(20, r.left + r.width / 2 - x), w - 20)}px`;
 }
 
-function show(i) {
+function tourShow(i) {
   if (i >= STEPS.length) return endTour();
   step = i;
   document.querySelector(STEPS[i][0]).scrollIntoView({ block: 'center' });
@@ -35,16 +35,16 @@ function show(i) {
   tour.querySelector('.skip').textContent = t('tourSkip');
   tour.querySelector('.skip').hidden = i === STEPS.length - 1;
   go.textContent = t(i === STEPS.length - 1 ? 'tourDone' : 'tourNext');
-  place(); go.focus();
+  tourPlace(); go.focus();
 }
 
-function startTour() { tour.hidden = false; show(0); }
+function startTour() { tour.hidden = false; tourShow(0); }
 function endTour() { tour.hidden = true; save('toured', 1); $('help').focus(); }
 
-go.onclick = () => show(step + 1);
+go.onclick = () => tourShow(step + 1);
 tour.querySelector('.skip').onclick = endTour;
 tour.onkeydown = e => { if (e.key === 'Escape') endTour(); if (e.key === 'Tab') {   // keep focus inside the tour
   e.preventDefault(); const skip = tour.querySelector('.skip'); (document.activeElement === go && !skip.hidden ? skip : go).focus(); } };
-for (const ev of ['resize', 'scroll']) addEventListener(ev, () => { if (!tour.hidden) place(); }, { passive: true });
+for (const ev of ['resize', 'scroll']) addEventListener(ev, () => { if (!tour.hidden) tourPlace(); }, { passive: true });
 $('help').onclick = startTour;
 if (!saved('toured')) startTour();
