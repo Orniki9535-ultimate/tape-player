@@ -6,7 +6,8 @@ A web cassette deck that plays YouTube links or your own audio files, with the f
 
 ## Features
 
-- A queue: paste more YouTube links while one plays, and they play one after another (NEXT skips ahead)
+- A queue: paste more YouTube links while one plays, and they play one after another (NEXT skips ahead).
+  A playlist link lists every song in it, so you can reorder or remove them; LOOP loops the whole queue
 - Real deck keys: play, pause, stop / eject, hold to rewind or fast-forward, next track, loop
 - Spinning reels, a tape counter, and a door that opens when a tape goes in or out
 - YouTube links (videos and playlists) or audio files from your device (pick or drag & drop)
