@@ -97,6 +97,7 @@ function stop() {   // STOP/EJECT is one key, like a real deck
   if (state !== 'stop') { src.pause(); return show('stop'); }
   if (!loaded) return;
   loaded = false; src.eject(); view.well(true); view.screen(false); view.msg('');
+  current = null; queue.length = 0; view.queue(queue);   // the queue goes out with the tape
 }
 const nextTrack = () => !loaded ? noTape() : queue.length && advance();
 function advance() {   // the next tape from the queue goes in and plays (with LOOP on, this one goes to the back of the queue)
