@@ -32,10 +32,12 @@ const view = {
   },
   bends: on => { for (const id of ['wow', 'age', 'ab']) $(id).disabled = !on; },
   queue(q) {   // the tapes waiting their turn
-    const ol = $('queue'); ol.replaceChildren(); $('queueBox').hidden = !q.length;
+    const ol = $('queue'); if (ol.querySelector('.drag')) return;   // mid-drag: the drop redraws it
+    const f = [...ol.children].findIndex(li => li.contains(document.activeElement));
+    ol.replaceChildren(); $('queueBox').hidden = !q.length;
     q.forEach((l, i) => {
       const li = document.createElement('li'), grip = document.createElement('button'), x = document.createElement('button');
-      const name = document.createElement('span'); name.textContent = l.title || l.url; name.title = l.url;
+      const name = document.createElement('span'); name.textContent = l.list ? '▤ ' + (l.title || t('plLater')) : l.title || l.url;   // a playlist lists its songs when it goes in name.title = l.url;
       li.append(grip, name, x);
       x.textContent = '×'; x.setAttribute('aria-label', t('unqueue')); x.onclick = () => unqueue(i);
       // move: drag the grip (mouse or finger) onto another song, or focus it and press ↑ / ↓
@@ -43,16 +45,17 @@ const view = {
       grip.onkeydown = e => {
         const to = i + (e.key === 'ArrowUp' ? -1 : e.key === 'ArrowDown' ? 1 : 0);
         if (to === i || to < 0 || to >= q.length) return;
-        e.preventDefault(); requeue(i, to); ol.children[to].querySelector('.grip').focus();
+        e.preventDefault(); requeue(i, to); ol.children[to].querySelector('.grip').focus();   // the moved song keeps focus
       };
       const over = e => document.elementFromPoint(e.clientX, e.clientY)?.closest('#queue li');
       const mark = el => { for (const o of ol.children) o.classList.toggle('over', o === el && o !== li); };
       grip.onpointerdown = e => { grip.setPointerCapture(e.pointerId); li.classList.add('drag'); };
       grip.onpointermove = e => li.classList.contains('drag') && mark(over(e));
-      grip.onpointerup = e => { const to = [...ol.children].indexOf(over(e)); li.classList.remove('drag'); mark(); if (to >= 0 && to !== i) requeue(i, to); };
-      grip.onpointercancel = () => { li.classList.remove('drag'); mark(); };
+      grip.onpointerup = e => { const to = [...ol.children].indexOf(over(e)); li.classList.remove('drag'); to >= 0 && to !== i ? requeue(i, to) : view.queue(q); };
+      grip.onpointercancel = () => { li.classList.remove('drag'); view.queue(q); };
       ol.append(li);
     });
+    if (f >= 0 && q.length) ol.children[Math.min(f, q.length - 1)].querySelector('.grip').focus();
   },
   extension() { const el = $('fxTag'); el.dataset.t = 'fxExt'; el.textContent = t('fxExt'); },   // the FX extension is on
 };

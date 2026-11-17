@@ -1,4 +1,4 @@
-// ENGINE · deck: the machine itself. Keys, tape position, motor, winding, LOOP, snapping tape, swapping tapes.
+// ENGINE · deck: the machine itself. Keys, tape position, motor, winding, LOOP, snapping tape, the queue of tapes.
 // It never touches the page. It shows things only through `view` (js/ui/view.js), and the UI changes
 // its settings only through setOpt().
 
@@ -20,8 +20,8 @@ let calm = 0;                // s played since the last snap or the start of thi
 let autoRew = false;         // LOOP is rewinding the tape by itself, to play it again
 let pos = 0, zero = 0;       // tape position (s) as shown by reels + counter; counter zero point
 let speed = 0;               // motor speed: 1 = playing, ±5 = winding
-let swapT = 0, swapping = false;
 const queue = [];            // tapes waiting their turn ({ vid, list, url, title }), like a chat music bot's queue
+let current = null;          // the YouTube tape in the deck, as a queue entry (LOOP sends it back to the end of the queue)
 
 const hissOn = () => hissTo(opts.bypass ? 0 : opts.hiss * 0.12);
 const tune = () => { if (fx) setFx(fx, opts); yt.fx(opts); };
@@ -38,18 +38,14 @@ function setOpt(k, v) {   // the UI changed a setting
 // ---- YouTube player events ----
 function ytEvent(s) {
   if (src !== yt) return;
-  if (swapping && s === 1) return yt.pause();   // the next track started on its own: wait for the new tape
   const v = yt.video();
-  if (loaded && v.title && v.title !== curTitle) {
-    const swap = curTitle && !wind;   // the playlist moved on (not the first title of a fresh tape)
-    curTitle = v.title; swap ? swapTape(v.title, v.video_id) : (view.title(v.title), view.stripes(v.video_id));
-  }
+  if (loaded && v.title && v.title !== curTitle) { curTitle = v.title; view.title(v.title); view.stripes(v.video_id); }
   const busy = wind || performance.now() < settle;       // we caused this event ourselves
   // the keys rule: YouTube playing while the deck isn't (it finished buffering after STOP/PAUSE, however long that
   // took, or the user clicked the video) gets paused again. Only PLAY starts the tape.
   if (s === 1 && state !== 'play' && !wind) return yt.pause();   // (fast-forward plays it on purpose, through the extension)
   if (s === 2 && state === 'play' && !busy) show('pause');
-  if (s === 0 && !wind && yt.lastTrack()) ended();
+  if (s === 0 && !wind) ended();
 }
 const ytError = () => { show('stop'); view.msg('ytError'); };
 const ytFxReady = () => {   // the FX extension answered (again, if the player page reloaded): hand it the settings
@@ -65,9 +61,9 @@ function show(s) {   // latch the keys to match the deck state
   state = s; view.keys(s);
   s === 'play' ? hissOn() : hissOff();
 }
-function ended() {   // end of tape: auto-stop; then the next queued tape, or with LOOP on, rewind and play it again
+function ended() {   // end of tape: auto-stop; then the next queued tape, or (LOOP, nothing queued) rewind and play it again
   show('stop'); clunk();
-  if (!opts.loop && queue.length) return setTimeout(() => { if (state === 'stop' && loaded && !wind) advance(); }, 600);
+  if (queue.length) return setTimeout(() => { if (state === 'stop' && loaded && !wind && queue.length) advance(); }, 600);
   if (opts.loop) setTimeout(() => {
     if (state !== 'stop' || !loaded || wind || !opts.loop) return;
     autoRew = true; windStart(-1); view.msg('rewinding');
@@ -102,34 +98,28 @@ function stop() {   // STOP/EJECT is one key, like a real deck
   if (!loaded) return;
   loaded = false; src.eject(); view.well(true); view.screen(false); view.msg('');
 }
-const nextTrack = () => !loaded ? noTape() : queue.length && src.lastTrack() ? advance() : src.next();
-function advance() {   // the next tape from the queue goes in and plays
+const nextTrack = () => !loaded ? noTape() : queue.length && advance();
+function advance() {   // the next tape from the queue goes in and plays (with LOOP on, this one goes to the back of the queue)
+  if (opts.loop && current) queue.push(current);
   const l = queue.shift(); view.queue(queue);
   if (wind) windEnd();
-  insert(yt, () => yt.cue(l));
+  insert(yt, () => yt.cue(current = l));
   setTimeout(() => { if (loaded && src === yt && state === 'stop') play(); }, 1100);   // once it's in (insert: 450 + 600 ms)
 }
-function enqueue(l) {
-  queue.push(l); view.queue(queue);
-  ytTitle(l.url).then(t => { l.title = t; view.queue(queue); }, () => {});   // no title: the list shows the link
+function named(l) {   // fetch a queue entry's title (no title: the list shows its link)
+  ytTitle(l.url).then(t => { l.title = t; view.queue(queue); }, () => {});
+  return l;
+}
+function enqueue(l) { queue.push(named(l)); view.queue(queue); }
+function ytTracks(ids) {   // a playlist went in: its first video is the tape, the rest queue up next, ahead of anything else
+  const [first, ...rest] = ids.map(vid => named({ vid, list: null, url: 'https://youtu.be/' + vid }));
+  current = first; queue.unshift(...rest); view.queue(queue);
 }
 const unqueue = i => { queue.splice(i, 1); view.queue(queue); };
 const requeue = (from, to) => { queue.splice(to, 0, ...queue.splice(from, 1)); view.queue(queue); };   // reorder
 const resetCounter = () => zero = pos;
-function swapTape(title, id) {   // playlist's next track: the old tape slides out, the new one goes in, then play on
-  const resume = state === 'play';
-  clearTimeout(swapT); clearTimeout(preroll);
-  swapping = true; settle = performance.now() + 1500; yt.pause(); show('stop'); clunk();
-  view.well(true);
-  swapT = setTimeout(() => {
-    if (!loaded) return swapping = false;   // ejected mid-swap
-    view.title(title); view.stripes(id); snapAt = 0; calm = 0; view.broken(false); pos = zero = 0;
-    view.well(false);
-    swapT = setTimeout(() => { swapping = false; clunk(); if (resume && loaded) play(); }, 600);
-  }, 450);
-}
 function insert(next, cue) {   // cue only: a tape doesn't play until you press PLAY
-  view.msg(''); clearTimeout(preroll); clearTimeout(swapT); swapping = false; show('stop');
+  view.msg(''); clearTimeout(preroll); show('stop'); current = null;
   const wait = loaded ? 450 : 0;   // the old tape slides out first
   if (loaded) src.eject();
   loaded = false; view.well(true);
@@ -144,7 +134,7 @@ function load(text) {   // YouTube link(s): while music is on they join the queu
   const ls = links(text);
   if (!ls.length) return view.msg('notYoutube');
   if (!yt.ready()) return view.msg('wait');
-  if (!loaded || state === 'stop') { const l = ls.shift(); insert(yt, () => yt.cue(l)); }
+  if (!loaded || state === 'stop') { const l = ls.shift(); insert(yt, () => yt.cue(current = l)); }
   else view.msg('queued');
   ls.forEach(enqueue);
   return true;
@@ -169,7 +159,7 @@ function windEnd(hitEnd) {
   const d = src.dur(), go = wasPlaying && !hitEnd;
   src.seek(d ? Math.min(pos, d - 0.5) : pos, go);
   if (hitEnd) { show('stop'); clunk(); } else if (go) hissOn();
-  if (again) setTimeout(() => { if (state === 'stop' && loaded && opts.loop) { src.first(); play(); } }, 500);
+  if (again) setTimeout(() => { if (state === 'stop' && loaded && opts.loop) play(); }, 500);
 }
 const skipRew = () => { if (autoRew) { pos = 0; windEnd(true); } };   // jump to the start, replay as usual
 

@@ -1,5 +1,5 @@
 // ENGINE · sources: where the music comes from. Both sources give the deck the same interface:
-//   play pause eject wind seek vol next first time dur playing   (+ motor, for files)
+//   play pause eject wind seek vol time dur playing   (+ motor, for files)
 
 const PREROLL = 400;   // ms between the PLAY key landing and music starting
 
@@ -21,8 +21,9 @@ let ytFx = false;   // the extension answered: this player's sound can be bent
 const ytWin = () => player && player.getIframe && player.getIframe().contentWindow;
 const ytPost = m => { const w = ytWin(); if (w) w.postMessage(m, '*'); };   // nothing secret in these: any origin may read them
 const ytRate = r => ytFx && ytPost({ tapeDeck: 'wind', rate: r });   // for the extension: + fast-forward, - rewind, 0 normal
-let want = null;  // { list, vid }: a playlist link that points at one video inside it
-function loadYouTube(el, onState, onError, onFx) {   // el: where the player iframe goes; onFx: the extension answered
+let want = null;  // { vid }: a playlist link being cued (vid: the video it points at, if any)
+// el: where the player iframe goes; onFx: the extension answered; onTracks: a playlist's videos, from the linked one on
+function loadYouTube(el, onState, onError, onFx, onTracks) {
   addEventListener('message', e => {
     if (!e.data || e.data.tapeDeck !== 'ready' || !ytWin() || e.source !== ytWin()) return;
     if (!/^https:\/\/www\.youtube(-nocookie)?\.com$/.test(e.origin)) return;
@@ -34,11 +35,13 @@ function loadYouTube(el, onState, onError, onFx) {   // el: where the player ifr
       events: {
         onReady: () => { ytReady = true; ytPost({ tapeDeck: 'hello' }); },
         onStateChange: e => {
-          if (want) {   // wait for the playlist to cue: only then can we find the linked video in it, and re-cue there
-            if (e.data !== 5) return;
-            const { list, vid } = want, i = (player.getPlaylist() || []).indexOf(vid); want = null;
-            if (i > 0) return state === 'play' ? player.loadPlaylist({ list, index: i })   // PLAY came first: keep it
-                                               : player.cuePlaylist({ list, index: i });   // the deck never sees track 1: no tape swap
+          if (want) {   // a playlist: once it cues we can read its videos. Each becomes its own tape (they go in the queue),
+            if (e.data !== 5) return;   // and the deck never sees the playlist itself
+            const ids = player.getPlaylist() || [], i = Math.max(0, ids.indexOf(want.vid)); want = null;
+            if (ids.length) {
+              onTracks(ids.slice(i));
+              return state === 'play' ? player.loadVideoById(ids[i]) : player.cueVideoById(ids[i]);   // PLAY came first: keep it
+            }
           }
           ytPlaying = e.data === 1;
           onState(e.data);
@@ -56,16 +59,14 @@ const yt = {
   fx: o => ytFx && ytPost({ tapeDeck: 'fx', wow: o.wow, age: o.age, bypass: o.bypass }),
   cue({ vid, list }) {
     ytPost({ tapeDeck: 'hello' });   // again on every tape: if the player page reloaded, the extension starts over
-    want = list && vid ? { list, vid } : null; list ? player.cuePlaylist({ list }) : player.cueVideoById(vid);
+    want = list ? { vid } : null; list ? player.cuePlaylist({ list }) : player.cueVideoById(vid);
   },
   video: () => player.getVideoData(),   // { title, video_id }
-  lastTrack: () => { const pl = player.getPlaylist(); return !pl || player.getPlaylistIndex() >= pl.length - 1; },
   play: () => player.playVideo(), pause: () => player.pauseVideo(), eject: () => { ytRate(0); player.stopVideo(); },
   wind(dir, rate) {   // with the extension both squeal like a file's: FF runs the video fast, REW plays what was heard backwards
     ytRate(dir * rate); ytFx && dir > 0 ? player.playVideo() : player.pauseVideo();
   },
-  next: () => player.nextVideo(), vol: v => player.setVolume(v),
-  first: () => (player.getPlaylist() || []).length > 1 && player.playVideoAt(0),   // LOOP replays a playlist from track 1
+  vol: v => player.setVolume(v),
   seek(t, go) { ytRate(0); player.seekTo(t, true); go ? player.playVideo() : player.pauseVideo(); },   // seekTo can start playback on its own
   time: () => player.getCurrentTime() || 0, dur: () => player.getDuration() || 0, playing: () => ytPlaying,
 };
@@ -113,7 +114,7 @@ const file = {
   seek(t, go) { unwind(); audio.currentTime = t; go ? this.play() : audio.pause(); },
   eject() { unwind(); audio.pause(); URL.revokeObjectURL(audio.src); audio.removeAttribute('src'); },
   vol(v) { this.v = v / 100; if (fx) fx.out.gain.value = this.v; },
-  next() {}, first() {}, lastTrack: () => true, time: () => audio.currentTime, dur: () => audio.duration || 0, playing: () => false,
+  time: () => audio.currentTime, dur: () => audio.duration || 0, playing: () => false,
 };
 
 // self-check: link parsing
