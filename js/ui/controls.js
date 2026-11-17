@@ -56,4 +56,28 @@ deck.ondragover = e => { e.preventDefault(); deck.classList.add('drop'); };
 deck.ondragleave = () => deck.classList.remove('drop');
 deck.ondrop = e => { e.preventDefault(); deck.classList.remove('drop'); clunk(); loadFile(e.dataTransfer.files[0]); };
 
-loadYouTube($('yt'), ytEvent, ytError, ytFxReady, ytTracks);
+// ---- the phone's lock screen, headphone buttons and media keys ----
+if (navigator.mediaSession) for (const [a, fn] of [['play', play], ['pause', pause], ['stop', stop], ['nexttrack', nextTrack]])
+  try { navigator.mediaSession.setActionHandler(a, key(fn)); } catch {}   // an action this browser doesn't know
+
+// ---- keyboard: Space plays / pauses, hold ← → to wind, N next song, ? the tour. By e.code, so a Thai layout works too.
+// Text boxes, sliders and switches keep their own keys, and so does a focused button for Space.
+let held = '';   // the arrow key winding the tape
+addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey || e.altKey || !tour.hidden || e.target.closest(e.code === 'Space' ? 'input, select, textarea, button' : 'input, select, textarea')) return;
+  if (e.code === 'Slash' && e.shiftKey) return startTour();
+  const dir = { ArrowLeft: -1, ArrowRight: 1 }[e.code];
+  const fn = dir ? () => { held = e.code; windStart(dir); } : { Space: () => state === 'play' ? pause() : play(), KeyN: nextTrack }[e.code];
+  if (!fn) return;
+  e.preventDefault();   // no page scrolling
+  if (!e.repeat && !held) key(fn)();
+});
+const letGo = () => { if (held) { held = ''; windEnd(); } };
+addEventListener('keyup', e => e.code === held && letGo());
+addEventListener('blur', letGo);
+
+// ---- the tapes (in the deck + queued) are remembered whenever the page goes out of sight, tab closing included ----
+addEventListener('visibilitychange', () => document.hidden && save('tapes', JSON.stringify(tapeState())));
+const lastTapes = () => { try { return JSON.parse(saved('tapes')); } catch {} };
+
+loadYouTube($('yt'), ytEvent, ytError, ytFxReady, ytTracks, () => resume(lastTapes()));

@@ -118,6 +118,13 @@ function ytTracks(ids) {   // a playlist went in: its first video is the tape, t
 const unqueue = i => { queue.splice(i, 1); view.queue(queue); };
 const requeue = (from, to) => { queue.splice(to, 0, ...queue.splice(from, 1)); view.queue(queue); };   // reorder
 const resetCounter = () => zero = pos;
+// the tapes, to pick up where we left off on the next visit (YouTube only: a file can't be reopened without asking)
+const tapeState = () => ({ tape: loaded && src === yt ? current : null, at: Math.floor(pos), queue });
+function resume(s) {   // the player is ready: last visit's tape goes back in, cued where it was; the rest queue up again
+  const ok = l => l && (l.vid || l.list), q = (s && s.queue || []).filter(ok);
+  if (ok(s && s.tape)) loaded ? q.unshift(s.tape) : insert(yt, () => yt.cue(current = s.tape, s.at));   // a file went in first: it stays
+  queue.push(...q.map(l => l.title ? l : named(l))); view.queue(queue);
+}
 function insert(next, cue) {   // cue only: a tape doesn't play until you press PLAY
   view.msg(''); clearTimeout(preroll); show('stop'); current = null;
   const wait = loaded ? 450 : 0;   // the old tape slides out first

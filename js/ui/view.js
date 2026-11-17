@@ -10,6 +10,7 @@ const view = {
     $('play').classList.toggle('down', s !== 'stop');
     $('pause').classList.toggle('down', s === 'pause');
     $('deck').classList.toggle('on', s === 'play');
+    if (navigator.mediaSession) navigator.mediaSession.playbackState = { play: 'playing', pause: 'paused' }[s] || 'none';
   },
   well(out) {   // tape slides out / in; each new tape is a random cassette design, never the same twice running
     const c = $('cassette'), looks = ['', 'noir', 'diag', 'block', 'kraft', 'dots', 'neon'].filter(l => l !== c.dataset.look);
@@ -60,8 +61,13 @@ const view = {
   extension() { const el = $('fxTag'); el.dataset.t = 'fxExt'; el.textContent = t('fxExt'); },   // the FX extension is on
 };
 
+function nowPlaying() {   // the phone's lock screen and the browser's media controls show the tape too
+  if (!navigator.mediaSession) return;
+  const id = tint.id, art = id ? [{ src: `https://i.ytimg.com/vi/${id}/hqdefault.jpg`, sizes: '480x360', type: 'image/jpeg' }] : [];
+  navigator.mediaSession.metadata = new MediaMetadata({ title: $('title').textContent, artist: t('title'), artwork: art });
+}
 function setTitle(t) {
-  const el = $('title'); el.textContent = t || '...';
+  const el = $('title'); el.textContent = t || '...'; nowPlaying();
   el.getAnimations().forEach(a => a.cancel());
   const over = el.scrollWidth - el.parentElement.clientWidth;
   if (over > 0) el.animate([{transform:'translateX(0)'},{transform:`translateX(${-over}px)`}],
@@ -84,7 +90,7 @@ function palette(img) {   // the most common, clearly different colours, most co
 }
 function tint(id) {
   const lab = document.querySelector('.label').style, vars = ['--s1', '--s2', '--s3', '--ink'];
-  tint.id = id;
+  tint.id = id; nowPlaying();
   if (!id) return vars.forEach(v => lab.removeProperty(v));
   const img = new Image(); img.crossOrigin = 'anonymous';
   img.onload = () => {
