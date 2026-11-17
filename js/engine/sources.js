@@ -3,12 +3,15 @@
 
 const PREROLL = 400;   // ms between the PLAY key landing and music starting
 
-function parse(url) {   // YouTube link(s) -> { vid, list, vids }; several links = a queue, played as one playlist
-  const vids = [...url.matchAll(/(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-]{11})/g)].map(m => m[1]);
-  if (!vids.length && /^[\w-]{11}$/.test(url)) vids.push(url);
-  const list = vids.length < 2 && url.match(/[?&]list=([\w-]+)/);   // in a queue each link is just its video
-  return { list: list ? list[1] : null, vid: vids[0] || null, vids };
+function parse(url) {   // YouTube link -> { vid, list }
+  const list = url.match(/[?&]list=([\w-]+)/);
+  const vid = url.match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-]{11})/) || url.match(/^([\w-]{11})$/);
+  return { list: list && list[1], vid: vid && vid[1] };
 }
+// the link box -> one { vid, list, url } per YouTube link in it (a text box strips newlines, so pasted lines arrive glued)
+const links = s => s.split(/\s+|(?=https?:\/\/)/).map(url => ({ ...parse(url), url })).filter(l => l.vid || l.list);
+const ytTitle = url => fetch('https://www.youtube.com/oembed?format=json&url=' + encodeURIComponent(url))   // for the queue list
+  .then(r => r.json()).then(j => j.title);
 
 // ---- YouTube: its audio lives in a cross-origin iframe, so we can start, stop and seek it, nothing more,
 // unless the Tape Deck FX browser extension (extension/) is installed: it runs the tape-tone chain inside the
@@ -34,7 +37,8 @@ function loadYouTube(el, onState, onError, onFx) {   // el: where the player ifr
           if (want) {   // wait for the playlist to cue: only then can we find the linked video in it, and re-cue there
             if (e.data !== 5) return;
             const { list, vid } = want, i = (player.getPlaylist() || []).indexOf(vid); want = null;
-            if (i > 0) return player.cuePlaylist({ list, index: i });   // the deck never sees track 1: no tape swap
+            if (i > 0) return state === 'play' ? player.loadPlaylist({ list, index: i })   // PLAY came first: keep it
+                                               : player.cuePlaylist({ list, index: i });   // the deck never sees track 1: no tape swap
           }
           ytPlaying = e.data === 1;
           onState(e.data);
@@ -50,10 +54,9 @@ const yt = {
   ready: () => ytReady,
   bends: () => ytFx,
   fx: o => ytFx && ytPost({ tapeDeck: 'fx', wow: o.wow, age: o.age, bypass: o.bypass }),
-  cue({ vid, list, vids }) {
+  cue({ vid, list }) {
     ytPost({ tapeDeck: 'hello' });   // again on every tape: if the player page reloaded, the extension starts over
-    want = list && vid ? { list, vid } : null;
-    vids.length > 1 ? player.cuePlaylist(vids) : list ? player.cuePlaylist({ list }) : player.cueVideoById(vid);
+    want = list && vid ? { list, vid } : null; list ? player.cuePlaylist({ list }) : player.cueVideoById(vid);
   },
   video: () => player.getVideoData(),   // { title, video_id }
   lastTrack: () => { const pl = player.getPlaylist(); return !pl || player.getPlaylistIndex() >= pl.length - 1; },
@@ -110,7 +113,7 @@ const file = {
   seek(t, go) { unwind(); audio.currentTime = t; go ? this.play() : audio.pause(); },
   eject() { unwind(); audio.pause(); URL.revokeObjectURL(audio.src); audio.removeAttribute('src'); },
   vol(v) { this.v = v / 100; if (fx) fx.out.gain.value = this.v; },
-  next() {}, first() {}, time: () => audio.currentTime, dur: () => audio.duration || 0, playing: () => false,
+  next() {}, first() {}, lastTrack: () => true, time: () => audio.currentTime, dur: () => audio.duration || 0, playing: () => false,
 };
 
 // self-check: link parsing
@@ -122,6 +125,5 @@ for (const [url, vid, list] of [
   ['hello', null, null],
   ['jNQXAC9IVRw', 'jNQXAC9IVRw', null],
 ]) { const r = parse(url); console.assert(r.vid === vid && r.list === list, 'parse', url, r); }
-// a queue: links pasted together (a text box strips the newlines, so they arrive glued) -> every video, no list
-console.assert(parse('https://youtu.be/jNQXAC9IVRwhttps://www.youtube.com/watch?v=dQw4w9WgXcQ&list=PL_x')
-  .vids.join() === 'jNQXAC9IVRw,dQw4w9WgXcQ' && parse('https://youtu.be/jNQXAC9IVRw https://youtu.be/dQw4w9WgXcQ').list === null, 'queue');
+console.assert(links('https://youtu.be/jNQXAC9IVRwhttps://www.youtube.com/playlist?list=PL_x  jNQXAC9IVRw nope')
+  .map(l => l.vid || l.list).join() === 'jNQXAC9IVRw,PL_x,jNQXAC9IVRw', 'links');

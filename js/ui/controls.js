@@ -19,7 +19,7 @@ const setLoop = on => { $('loop').setAttribute('aria-pressed', on); $('skip').di
 setLoop(saved('loop') === 'true');
 
 // ---- language: English unless the visitor picked Thai before ----
-const useLang = l => { setLang(l); view.msg(view.shown); save('lang', lang); };
+const useLang = l => { setLang(l); view.msg(view.shown); view.queue(queue); save('lang', lang); };
 setLang(saved('lang') || 'en');
 $('lang').onclick = () => useLang(lang === 'en' ? 'th' : 'en');
 
@@ -32,7 +32,7 @@ document.addEventListener('click', e => {
 
 // ---- keys ----
 const key = fn => () => { clunk(); fn(); };
-$('load').onclick  = key(() => load($('url').value.trim()));
+$('load').onclick  = key(() => { if (load($('url').value.trim())) $('url').value = ''; });   // empty: ready for the next link
 $('url').onkeydown = e => { if (e.key === 'Enter') $('load').click(); };   // braces: returning false from on* handlers cancels the key
 $('play').onclick  = key(play);
 $('pause').onclick = key(pause);
